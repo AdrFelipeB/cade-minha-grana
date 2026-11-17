@@ -359,6 +359,17 @@ p {
   text-decoration: line-through;
 }
 
+/* Linha pedindo confirmação: realce suave, ocupando a largura do card */
+.linha--confirmar {
+  margin: 0 -16px;
+  padding: 12px 16px;
+  background: var(--accent-soft);
+}
+
+.linha--confirmar .linha__titulo {
+  white-space: normal;
+}
+
 .icone-linha {
   color: var(--text-2);
   flex-shrink: 0;
@@ -815,14 +826,21 @@ p {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 8px;
-  font-size: 18px;
+  padding: 0 4px;
+  font-size: 16px;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Textos do menu nunca quebram linha */
+.lateral .btn {
+  white-space: nowrap;
 }
 
 .lateral__logo {
-  width: 34px;
-  height: 34px;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
   background: var(--accent);
   color: var(--on-accent);
@@ -972,9 +990,6 @@ p {
 /* Notebooks menores (1024–1199px): menu, margens e colunas laterais
    mais estreitos, para sobrar espaço para as listas */
 @media (max-width: 1199px) {
-  .layout-desktop {
-    grid-template-columns: 216px minmax(0, 1fr);
-  }
   .conteudo {
     padding: 20px 24px 40px;
   }

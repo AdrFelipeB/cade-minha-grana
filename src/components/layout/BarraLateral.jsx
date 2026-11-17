@@ -1,4 +1,5 @@
 import { IconLock, IconPlus, IconWallet } from "@tabler/icons-react";
+import { NOME_APP } from "../../marca";
 import { TELAS } from "./telas";
 
 /* Menu lateral fixo (desktop): marca, ação principal e as 4 telas. */
@@ -9,7 +10,7 @@ export default function BarraLateral({ tela, onChange, alertaAjustes, onAdiciona
         <span className="lateral__logo" aria-hidden="true">
           <IconWallet size={20} />
         </span>
-        Meus Gastos
+        {NOME_APP}
       </div>
 
       <button type="button" className="btn btn--primario btn--bloco" onClick={onAdicionar}>

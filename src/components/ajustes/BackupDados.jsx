@@ -33,7 +33,7 @@ export default function BackupDados({ dados, ultimoBackup, precisaBackup, onExpo
     if (!arquivo) return;
 
     if (arquivo.size > TAMANHO_MAXIMO) {
-      setAviso({ tipo: "erro", texto: "Arquivo grande demais para ser um backup do Meus Gastos." });
+      setAviso({ tipo: "erro", texto: "Arquivo grande demais para ser um backup deste app." });
       return;
     }
 

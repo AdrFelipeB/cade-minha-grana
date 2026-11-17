@@ -19,7 +19,10 @@
    ============================================================ */
 
 import { VERSAO_DADOS } from "./storage";
+import { NOME_ARQUIVO } from "../marca";
 
+// Identificador gravado dentro de cada backup. NÃO mudar junto com o nome
+// do app: backups já exportados deixariam de ser reconhecidos.
 export const APP_ID = "meus-gastos";
 export const TAMANHO_MAXIMO = 5 * 1024 * 1024; // 5 MB: muito acima de qualquer uso real
 export const DIAS_PARA_LEMBRAR_BACKUP = 30;
@@ -62,7 +65,7 @@ export function gerarBackup({ cartoes, compras, gastos, pagos, salario }) {
     dados: { cartoes, compras, gastos, pagos, salario },
   };
   return {
-    nomeArquivo: `meus-gastos-backup-${dataLocalISO()}.json`,
+    nomeArquivo: `${NOME_ARQUIVO}-backup-${dataLocalISO()}.json`,
     conteudo: JSON.stringify(backup, null, 2),
   };
 }
@@ -161,7 +164,7 @@ export function lerBackup(texto, { qtdGradientes }) {
     const embrulhado = obj.app === APP_ID && ehObjeto(obj.dados);
     const dados = embrulhado ? obj.dados : obj;
     exigir(Array.isArray(dados.cartoes) || Array.isArray(dados.gastos),
-      "não parece ser um backup do Meus Gastos.");
+      "não parece ser um backup deste app.");
 
     const versao = (embrulhado ? obj.versao : dados.versao) ?? 1;
     exigir(Number.isInteger(versao) && versao >= 1, "a versão do backup é inválida.");

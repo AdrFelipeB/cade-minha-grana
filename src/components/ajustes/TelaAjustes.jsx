@@ -1,4 +1,5 @@
 import { IconLock } from "@tabler/icons-react";
+import { NOME_APP } from "../../marca";
 import BackupDados from "./BackupDados";
 import CampoSalario from "./CampoSalario";
 
@@ -47,7 +48,7 @@ export default function TelaAjustes({
       {!desktop && (
         <p className="rotulo" style={{ display: "flex", gap: 8, alignItems: "center", margin: "20px 2px" }}>
           <IconLock size={16} aria-hidden="true" />
-          Meus Gastos não usa banco, conta nem internet: seus dados nunca saem deste aparelho.
+          O {NOME_APP} não usa banco, conta nem internet: seus dados nunca saem deste aparelho.
         </p>
       )}
     </>
