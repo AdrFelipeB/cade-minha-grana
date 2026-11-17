@@ -2,6 +2,8 @@
 
 Controle de cartões de crédito, parcelas e contas do mês — **sem vincular banco nenhum**.
 
+**Acesse: https://cade-minha-grana-woad.vercel.app** (funciona no celular e no computador; dá para instalar na tela inicial).
+
 Tudo roda no seu navegador: não há servidor, conta, login nem coleta de dados. As informações ficam salvas só no aparelho (`localStorage`) e você leva para outro aparelho com um arquivo de backup.
 
 ## O que dá para fazer
