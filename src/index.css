@@ -784,6 +784,268 @@ p {
   margin-bottom: 12px;
 }
 
+/* ============================================================
+   DESKTOP (≥ 1024px)
+   ------------------------------------------------------------
+   O App troca a estrutura via useMediaQuery (menu lateral no lugar
+   da barra inferior, telas em várias colunas). As classes abaixo só
+   existem nesse layout, então não afetam o celular.
+   ============================================================ */
+
+.layout-desktop {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+/* ---------- menu lateral ---------- */
+.lateral {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 16px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.lateral__marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.lateral__logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--on-accent);
+  display: grid;
+  place-items: center;
+}
+
+.lateral__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lateral__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-2);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lateral__item:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.lateral__item[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.lateral__alerta {
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warning-fill);
+}
+
+.lateral__rodape {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  padding: 0 8px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* ---------- área de conteúdo ---------- */
+.conteudo {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 40px 48px;
+}
+
+.barra-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+  margin-bottom: 12px;
+}
+
+.barra-topo h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* No desktop o seletor de mês fica à direita do título, sem grudar no topo */
+.barra-topo .seletor-mes {
+  position: static;
+  padding: 0;
+  gap: 4px;
+  background: none;
+}
+
+.barra-topo .seletor-mes__centro {
+  min-width: 170px;
+}
+
+/* ---------- grades ---------- */
+.grade-metricas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (min-width: 1280px) {
+  .grade-metricas {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.grade-metricas .card {
+  margin: 0;
+}
+
+.metrica__valor {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 4px 0 6px;
+}
+
+.grade-2col,
+.grade-contas,
+.grade-cartoes,
+.grade-ajustes {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+.grade-2col {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+
+.grade-contas {
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+/* Na coluna lateral estreita, campos do formulário um embaixo do outro */
+.grade-contas aside .grade-2 {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.grade-cartoes {
+  grid-template-columns: 320px minmax(0, 1fr);
+}
+
+.grade-ajustes {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Notebooks menores (1024–1199px): menu, margens e colunas laterais
+   mais estreitos, para sobrar espaço para as listas */
+@media (max-width: 1199px) {
+  .layout-desktop {
+    grid-template-columns: 216px minmax(0, 1fr);
+  }
+  .conteudo {
+    padding: 20px 24px 40px;
+  }
+  .grade-contas {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .grade-cartoes {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+}
+
+/* Cartão selecionado na lista do mestre-detalhe */
+.linha--botao[aria-current="true"] {
+  background: var(--accent-soft);
+}
+
+/* ---------- gráfico de barras dos últimos meses ---------- */
+.grafico {
+  display: flex;
+  gap: 16px;
+  height: 220px;
+}
+
+.grafico__coluna {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.grafico__trilho {
+  flex: 1;
+  width: 100%;
+  max-width: 56px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.grafico__barra {
+  width: 100%;
+  border-radius: 8px 8px 4px 4px;
+  background: var(--surface-2);
+  transition: height 0.3s ease, background 0.15s ease;
+}
+
+.grafico__coluna:hover .grafico__barra {
+  background: var(--accent-soft);
+}
+
+.grafico__coluna[aria-current] .grafico__barra {
+  background: var(--accent);
+}
+
+.grafico__valor,
+.grafico__mes {
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.grafico__coluna[aria-current] .grafico__mes {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

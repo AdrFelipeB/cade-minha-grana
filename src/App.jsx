@@ -19,6 +19,12 @@ import DetalheCartao from "./components/cartoes/DetalheCartao";
 import FormCompra from "./components/cartoes/FormCompra";
 import FormCartao from "./components/cartoes/FormCartao";
 import TelaAjustes from "./components/ajustes/TelaAjustes";
+import BarraLateral from "./components/layout/BarraLateral";
+import ResumoDesktop from "./components/resumo/ResumoDesktop";
+import CartoesDesktop from "./components/cartoes/CartoesDesktop";
+import { QUERY_DESKTOP, useMediaQuery } from "./hooks/useMediaQuery";
+
+const TITULOS_TELA = { resumo: "Resumo", contas: "Contas", cartoes: "Cartões", ajustes: "Ajustes" };
 
 const FORM_CARTAO_VAZIO = { nome: "", final: "" };
 const formCompraVazio = (mes, cartaoId = "") => ({ cartaoId, descricao: "", valor: "", parcelas: 1, mes });
@@ -69,10 +75,18 @@ export default function App() {
   const [ultimoBackup, setUltimoBackup] = useState(lerUltimoBackup);
   const lembrarBackup = precisaDeBackup(dados, ultimoBackup);
 
+  // Layout: celular (barra embaixo) ou desktop (menu lateral, várias colunas)
+  const desktop = useMediaQuery(QUERY_DESKTOP);
+
   const mesMinimo = addMeses(hojeMes(), -MESES_RETENCAO);
   const resumo = useResumoDoMes(dados, mesAtual);
   const historico = useHistorico(compras, gastos);
-  const cartaoAtivo = tela === "cartoes" ? cartoes.find((c) => c.id === cartaoAberto) : null;
+  // No celular, o detalhe só aparece se um cartão foi aberto; no desktop
+  // a fatura fica sempre ao lado da lista, então o 1º cartão é o padrão.
+  const cartaoAtivo =
+    tela !== "cartoes"
+      ? null
+      : cartoes.find((c) => c.id === cartaoAberto) ?? (desktop ? cartoes[0] ?? null : null);
 
   /* -------- navegação -------- */
   const navegar = (novaTela) => {
@@ -95,6 +109,10 @@ export default function App() {
   const mudarMes = (mes) => {
     setMesAtual(mes);
     setEdicaoOverride(null);
+    // Rascunhos acompanham o mês visto (importa no desktop, onde o
+    // formulário de conta fica sempre aberto ao lado da lista)
+    setFormGasto((f) => ({ ...f, mes }));
+    setFormCompra((f) => ({ ...f, mes }));
   };
 
   /* -------- abrir painéis -------- */
@@ -120,7 +138,7 @@ export default function App() {
     else setSheet("escolha");
   };
   const rotuloAdicionar =
-    tela === "contas" ? "Adicionar conta" : cartaoAtivo ? "Adicionar compra" : "Adicionar";
+    tela === "contas" ? "Nova conta" : cartaoAtivo ? "Nova compra" : "Novo lançamento";
 
   /* -------- salvar (retornam true/false para o form mostrar erro) -------- */
   const salvarCartao = () => {
@@ -211,82 +229,136 @@ export default function App() {
   const togglePagoNoMes = (id) => togglePago(mesAtual, id);
 
   /* ============================ RENDER ============================ */
+
+  // Props comuns às versões celular e desktop de cada tela
+  const propsResumo = {
+    mesAtual,
+    cartoes,
+    salario: dados.salario,
+    resumo,
+    historico,
+    onAbrirContas: () => navegar("contas"),
+    onAbrirCartao: abrirCartao,
+    onAdicionar: () => setSheet("escolha"),
+    onDefinirSalario: () => {
+      navegar("ajustes");
+      setFocarSalario(true);
+    },
+    onSelecionarMes: mudarMes,
+  };
+
+  const conteudo = (
+    <>
+      {tela === "resumo" &&
+        (desktop ? (
+          <ResumoDesktop {...propsResumo} onTogglePago={togglePagoNoMes} />
+        ) : (
+          <TelaResumo {...propsResumo} />
+        ))}
+
+      {tela === "contas" && (
+        <TelaContas
+          desktop={desktop}
+          mesAtual={mesAtual}
+          resumo={resumo}
+          form={formGasto}
+          onFormChange={setFormGasto}
+          onSalvarForm={salvarGasto}
+          edicaoOverride={edicaoOverride}
+          onEdicaoOverrideChange={setEdicaoOverride}
+          onSalvarOverride={confirmarOverride}
+          onRemoverOverride={voltarAoPadrao}
+          onTogglePago={togglePagoNoMes}
+          onRemover={excluirGasto}
+          onAdicionar={abrirNovaConta}
+        />
+      )}
+
+      {tela === "cartoes" && desktop && (
+        <CartoesDesktop
+          cartoes={cartoes}
+          cartaoSelecionado={cartaoAtivo}
+          mesAtual={mesAtual}
+          resumo={resumo}
+          onSelecionar={setCartaoAberto}
+          onNovoCartao={abrirNovoCartao}
+          onNovaCompra={() => abrirNovaCompra(cartaoAtivo?.id)}
+          onRemoverCartao={() => cartaoAtivo && excluirCartao(cartaoAtivo.id)}
+          onTogglePago={togglePagoNoMes}
+          onRemoverCompra={excluirCompra}
+        />
+      )}
+
+      {tela === "cartoes" &&
+        !desktop &&
+        (cartaoAtivo ? (
+          <DetalheCartao
+            cartao={cartaoAtivo}
+            mesAtual={mesAtual}
+            resumo={resumo}
+            onVoltar={() => setCartaoAberto(null)}
+            onNovaCompra={() => abrirNovaCompra(cartaoAtivo.id)}
+            onRemoverCartao={() => excluirCartao(cartaoAtivo.id)}
+            onTogglePago={togglePagoNoMes}
+            onRemoverCompra={excluirCompra}
+          />
+        ) : (
+          <TelaCartoes
+            cartoes={cartoes}
+            resumo={resumo}
+            onAbrirCartao={abrirCartao}
+            onNovoCartao={abrirNovoCartao}
+          />
+        ))}
+
+      {tela === "ajustes" && (
+        <TelaAjustes
+          desktop={desktop}
+          dados={dados}
+          focarSalario={focarSalario}
+          onSalvarSalario={definirSalario}
+          ultimoBackup={ultimoBackup}
+          precisaBackup={lembrarBackup}
+          onExportado={backupExportado}
+          onImportar={importarBackup}
+        />
+      )}
+    </>
+  );
+
+  const seletorMes = tela !== "ajustes" && (
+    <SeletorMes mesAtual={mesAtual} mesMinimo={mesMinimo} onChange={mudarMes} />
+  );
+
   return (
     <>
-      <main className="app">
-        {tela !== "ajustes" && (
-          <SeletorMes mesAtual={mesAtual} mesMinimo={mesMinimo} onChange={mudarMes} />
-        )}
-
-        {tela === "resumo" && (
-          <TelaResumo
-            mesAtual={mesAtual}
-            cartoes={cartoes}
-            salario={dados.salario}
-            resumo={resumo}
-            historico={historico}
-            onAbrirContas={() => navegar("contas")}
-            onAbrirCartao={abrirCartao}
-            onAdicionar={() => setSheet("escolha")}
-            onDefinirSalario={() => {
-              navegar("ajustes");
-              setFocarSalario(true);
-            }}
-            onSelecionarMes={mudarMes}
+      {desktop ? (
+        <div className="layout-desktop">
+          <BarraLateral
+            tela={tela}
+            onChange={navegar}
+            alertaAjustes={lembrarBackup}
+            onAdicionar={adicionar}
+            rotuloAdicionar={rotuloAdicionar}
           />
-        )}
-
-        {tela === "contas" && (
-          <TelaContas
-            mesAtual={mesAtual}
-            resumo={resumo}
-            edicaoOverride={edicaoOverride}
-            onEdicaoOverrideChange={setEdicaoOverride}
-            onSalvarOverride={confirmarOverride}
-            onRemoverOverride={voltarAoPadrao}
-            onTogglePago={togglePagoNoMes}
-            onRemover={excluirGasto}
-            onAdicionar={abrirNovaConta}
-          />
-        )}
-
-        {tela === "cartoes" &&
-          (cartaoAtivo ? (
-            <DetalheCartao
-              cartao={cartaoAtivo}
-              mesAtual={mesAtual}
-              resumo={resumo}
-              onVoltar={() => setCartaoAberto(null)}
-              onNovaCompra={() => abrirNovaCompra(cartaoAtivo.id)}
-              onRemoverCartao={() => excluirCartao(cartaoAtivo.id)}
-              onTogglePago={togglePagoNoMes}
-              onRemoverCompra={excluirCompra}
-            />
-          ) : (
-            <TelaCartoes
-              cartoes={cartoes}
-              resumo={resumo}
-              onAbrirCartao={abrirCartao}
-              onNovoCartao={abrirNovoCartao}
-            />
-          ))}
-
-        {tela === "ajustes" && (
-          <TelaAjustes
-            dados={dados}
-            focarSalario={focarSalario}
-            onSalvarSalario={definirSalario}
-            ultimoBackup={ultimoBackup}
-            precisaBackup={lembrarBackup}
-            onExportado={backupExportado}
-            onImportar={importarBackup}
-          />
-        )}
-      </main>
-
-      {tela !== "ajustes" && <BotaoAdicionar onClick={adicionar} rotulo={rotuloAdicionar} />}
-
-      <BarraNavegacao tela={tela} onChange={navegar} alertaAjustes={lembrarBackup} />
+          <main className="conteudo">
+            <header className="barra-topo">
+              <h1>{TITULOS_TELA[tela]}</h1>
+              {seletorMes}
+            </header>
+            {conteudo}
+          </main>
+        </div>
+      ) : (
+        <>
+          <main className="app">
+            {seletorMes}
+            {conteudo}
+          </main>
+          {tela !== "ajustes" && <BotaoAdicionar onClick={adicionar} rotulo={rotuloAdicionar} />}
+          <BarraNavegacao tela={tela} onChange={navegar} alertaAjustes={lembrarBackup} />
+        </>
+      )}
 
       <Sheet aberto={sheet !== null} onFechar={() => setSheet(null)} titulo={TITULOS_SHEET[sheet]}>
         {sheet === "escolha" && (

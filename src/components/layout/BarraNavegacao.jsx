@@ -1,18 +1,6 @@
-import {
-  IconCreditCard,
-  IconLayoutDashboard,
-  IconReceipt,
-  IconSettings,
-} from "@tabler/icons-react";
+import { TELAS } from "./telas";
 
-const TELAS = [
-  { id: "resumo", rotulo: "Resumo", Icone: IconLayoutDashboard },
-  { id: "contas", rotulo: "Contas", Icone: IconReceipt },
-  { id: "cartoes", rotulo: "Cartões", Icone: IconCreditCard },
-  { id: "ajustes", rotulo: "Ajustes", Icone: IconSettings },
-];
-
-/* Barra fixa embaixo: no celular, é onde o polegar alcança.
+/* Barra fixa embaixo (celular): é onde o polegar alcança.
    aria-current="page" marca a tela atual (o CSS usa o mesmo atributo). */
 export default function BarraNavegacao({ tela, onChange, alertaAjustes }) {
   return (
