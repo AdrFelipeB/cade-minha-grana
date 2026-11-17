@@ -117,8 +117,14 @@ export function useDados() {
     if (v >= 0) atualizar("salario", () => centavos(v));
   };
 
+  /* -------- backup -------- */
+  // Troca tudo pelos dados importados (já validados), aplicando a
+  // mesma limpeza de retenção do carregamento.
+  const substituirDados = (novos) => setDados(limparDadosAntigos(novos));
+
   return {
     dados,
+    substituirDados,
     adicionarCartao,
     removerCartao,
     adicionarCompra,

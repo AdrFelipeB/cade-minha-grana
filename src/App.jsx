@@ -13,6 +13,7 @@ import FormCartao from "./components/FormCartao";
 import AbaGeral from "./components/geral/AbaGeral";
 import AbaContas from "./components/contas/AbaContas";
 import AbaCartao from "./components/cartao/AbaCartao";
+import BackupDados from "./components/BackupDados";
 
 const FORM_CARTAO_VAZIO = { nome: "", final: "" };
 const formCompraVazio = (mes) => ({ descricao: "", valor: "", parcelas: 1, mes });
@@ -25,6 +26,7 @@ const formGastoVazio = (mes) => ({ descricao: "", valor: "", tipo: "fixo", mes }
 export default function App() {
   const {
     dados,
+    substituirDados,
     adicionarCartao,
     removerCartao,
     adicionarCompra,
@@ -128,6 +130,19 @@ export default function App() {
     setEdicaoOverride(null);
   };
 
+  // Depois de restaurar, volta para a visão geral do mês atual e fecha
+  // qualquer edição aberta (ela poderia apontar para itens que não existem mais).
+  const importarBackup = (novos) => {
+    substituirDados(novos);
+    setAbaAtiva("geral");
+    setMesAtual(hojeMes());
+    setEdicaoOverride(null);
+    setSalarioInput(null);
+    setMostrarFormCartao(false);
+    setMostrarFormCompra(false);
+    setMostrarFormGasto(false);
+  };
+
   const salvarSalario = () => {
     definirSalario(parseValor(salarioInput ?? ""));
     setSalarioInput(null);
@@ -217,6 +232,8 @@ export default function App() {
             onRemoverCompra={excluirCompra}
           />
         )}
+
+        <BackupDados dados={dados} onImportar={importarBackup} />
       </div>
     </div>
   );
