@@ -1,12 +1,16 @@
 import { IconCheck } from "@tabler/icons-react";
 import { labelMes } from "../../lib/meses";
 import { brl, valorParaInput } from "../../lib/valores";
-import BotaoRemover from "../comum/BotaoRemover";
+import { situacaoVencimento } from "../../lib/vencimentos";
+import BotaoEditar from "../comum/BotaoEditar";
+import IconeCategoria from "../comum/IconeCategoria";
 import LinhaItem from "../comum/LinhaItem";
+import SeloVencimento from "../comum/SeloVencimento";
 
 /* Uma conta na lista do mês.
    Conta fixa: tocar no valor (sublinhado tracejado) ajusta só este mês (override).
-   `overrideInput` é null quando esta conta não está em edição. */
+   O lápis edita a conta em si (nome, valor padrão, vencimento…) e permite excluir.
+   `overrideInput` é null quando o valor deste mês não está em edição. */
 export default function ItemConta({
   gasto: g,
   mesAtual,
@@ -17,22 +21,28 @@ export default function ItemConta({
   onSalvarOverride,
   onRemoverOverride,
   onTogglePago,
-  onRemover,
+  onEditar,
 }) {
   const fixo = g.tipo === "fixo";
   const temOverride = fixo && g.overrides && g.overrides[mesAtual] != null;
-  const editando = overrideInput !== null;
+  const editandoValor = overrideInput !== null;
+  const situacao = situacaoVencimento(mesAtual, g.diaVencimento, pago);
 
-  const detalhe = fixo ? (
+  const detalhe = (
     <>
-      Fixa · desde {labelMes(g.mesInicio)}
+      <IconeCategoria categoria={g.categoria} />
+      {fixo ? <> Fixa</> : <> Só em {labelMes(g.mes)}</>}
       {temOverride && <span className="alerta"> · padrão {brl(g.valor)}</span>}
+      {situacao && (
+        <>
+          {" "}
+          <SeloVencimento situacao={situacao} />
+        </>
+      )}
     </>
-  ) : (
-    <>Só em {labelMes(g.mes)}</>
   );
 
-  if (editando) {
+  if (editandoValor) {
     return (
       <div className="linha" style={{ flexWrap: "wrap" }}>
         <div className="linha__principal">
@@ -90,7 +100,7 @@ export default function ItemConta({
       ) : (
         <span className="linha__valor">{brl(g.valorNoMes)}</span>
       )}
-      <BotaoRemover onClick={onRemover} title="Remover conta" descricao={g.descricao} />
+      <BotaoEditar onClick={onEditar} descricao={g.descricao} />
     </LinhaItem>
   );
 }

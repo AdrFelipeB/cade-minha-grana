@@ -1,16 +1,27 @@
 import { corComprometimento } from "../../cores";
 import { labelMes } from "../../lib/meses";
 import { brl } from "../../lib/valores";
+import BotaoDiscreto from "../layout/BotaoDiscreto";
 
 /* O número que importa (quanto gastei) em destaque, e o contexto logo abaixo:
    quanto ganho, quanto sobra, quanto da renda está comprometido e o que falta pagar. */
-export default function CartaoResumo({ mesAtual, salario, resumo, onDefinirSalario }) {
+export default function CartaoResumo({
+  mesAtual,
+  salario,
+  resumo,
+  discreto,
+  onAlternarDiscreto,
+  onDefinirSalario,
+}) {
   const { totalGeral, totalPago, totalRestante, sobra, pctComprometido } = resumo;
   const nomeMes = labelMes(mesAtual).split(" ")[0];
 
   return (
     <section className="card" aria-label={`Resumo de ${nomeMes}`}>
-      <div className="rotulo">Gastos de {nomeMes}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "-6px -8px -6px 0" }}>
+        <div className="rotulo">Gastos de {nomeMes}</div>
+        <BotaoDiscreto ligado={discreto} onAlternar={onAlternarDiscreto} />
+      </div>
       <div className="valor-grande num">{brl(totalGeral)}</div>
 
       {salario > 0 ? (

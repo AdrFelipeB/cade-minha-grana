@@ -17,8 +17,15 @@ const CHAVE_ULTIMO_BACKUP = "gerenciador-cartoes:ultimo-backup";
 /* Versão do formato dos dados. Suba este número quando mudar o
    formato (ex.: renomear um campo) e escreva a conversão da versão
    antiga para a nova — assim backups antigos continuam importáveis.
-   Dados sem `versao` (salvos antes deste campo existir) são versão 1. */
-export const VERSAO_DADOS = 1;
+   Dados sem `versao` (salvos antes deste campo existir) são versão 1.
+
+   Histórico:
+   1 → formato original.
+   2 → campos opcionais novos: `categoria` (compras e contas),
+       `diaVencimento` (contas e cartões) e `limite` (cartões).
+       Dados da versão 1 continuam válidos sem conversão: os campos
+       novos simplesmente não existem neles. */
+export const VERSAO_DADOS = 2;
 
 export function loadData() {
   try {
@@ -45,6 +52,24 @@ export function lerUltimoBackup() {
     return localStorage.getItem(CHAVE_ULTIMO_BACKUP);
   } catch {
     return null;
+  }
+}
+
+/* Preferências de interface (ex.: modo discreto). Ficam fora dos dados
+   do usuário: não vão para o backup e não passam pela validação. */
+export function lerPreferencia(nome) {
+  try {
+    return localStorage.getItem(`gerenciador-cartoes:${nome}`);
+  } catch {
+    return null;
+  }
+}
+
+export function salvarPreferencia(nome, valor) {
+  try {
+    localStorage.setItem(`gerenciador-cartoes:${nome}`, valor);
+  } catch {
+    /* sem storage: a preferência vale só até fechar a página */
   }
 }
 

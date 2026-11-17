@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { IconAlertTriangle, IconDownload, IconUpload } from "@tabler/icons-react";
 import { CORES_CARTAO } from "../../cores";
+import { IDS_CATEGORIAS } from "../../categorias";
 import { baixarArquivo, diasDesde, gerarBackup, lerBackup, TAMANHO_MAXIMO } from "../../lib/backup";
 
 function textoUltimoBackup(iso) {
@@ -39,7 +40,10 @@ export default function BackupDados({ dados, ultimoBackup, precisaBackup, onExpo
 
     try {
       const texto = await arquivo.text();
-      const { dados: novos, exportadoEm } = lerBackup(texto, { qtdGradientes: CORES_CARTAO.length });
+      const { dados: novos, exportadoEm } = lerBackup(texto, {
+        qtdGradientes: CORES_CARTAO.length,
+        categorias: IDS_CATEGORIAS,
+      });
 
       const quando = exportadoEm ? ` de ${new Date(exportadoEm).toLocaleDateString("pt-BR")}` : "";
       const resumo = `${novos.cartoes.length} cartão(ões), ${novos.compras.length} compra(s) e ${novos.gastos.length} conta(s)`;

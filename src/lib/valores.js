@@ -1,7 +1,23 @@
 /* Helpers de dinheiro e ids. */
 
+/* Modo discreto: esconde os valores (para abrir o app em público).
+   É uma variável do módulo lida por brl(): o App liga/desliga com
+   definirModoDiscreto() e em seguida re-renderiza (muda um estado),
+   então toda a tela é redesenhada já com os valores escondidos.
+   Assim nenhum componente precisa saber que o modo existe. */
+let modoDiscreto = false;
+export const definirModoDiscreto = (ligado) => {
+  modoDiscreto = ligado;
+};
+
 export const brl = (v) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  modoDiscreto ? "R$ •••••" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+// Sem centavos, para rótulos de gráfico ("R$ 1.380")
+export const brlCurto = (v) =>
+  modoDiscreto
+    ? "R$ •••"
+    : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
 // Ponto só como separador de milhar: "1.500", "12.345.678"
 const SO_MILHAR = /^\d{1,3}(\.\d{3})+$/;

@@ -34,6 +34,11 @@
 
   --sombra: 0 6px 20px rgba(17, 24, 39, 0.16);
   --largura: 560px;
+
+  /* Séries de gráfico (paleta de dados, separada das cores de interface).
+     Par validado para daltonismo e contraste nos dois temas. */
+  --serie-1: #2a78d6; /* parcelas de cartão */
+  --serie-2: #eb6834; /* contas */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -61,6 +66,9 @@
     --danger-soft: rgba(248, 113, 113, 0.12);
 
     --sombra: 0 6px 20px rgba(0, 0, 0, 0.5);
+
+    --serie-1: #3987e5;
+    --serie-2: #d95926;
   }
 }
 
@@ -547,6 +555,402 @@ p {
   color: var(--danger);
 }
 
+.btn-icone--editar:hover {
+  color: var(--accent);
+}
+
+/* ---------- selo (vencimento, status) ---------- */
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.selo--alerta {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.selo--perigo {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.icone-categoria {
+  display: inline-flex;
+  vertical-align: -2px;
+  color: var(--text-3);
+}
+
+/* Cabeçalho de lista com ação à direita (ex.: "Pagar todas") */
+.topo-lista {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 22px 2px 8px;
+}
+
+.topo-tela + .topo-lista {
+  margin-top: 0;
+}
+
+/* "Pagar tudo" pedindo confirmação */
+.confirmar-tudo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px 10px 8px 14px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  font-size: 14px;
+  flex-basis: 100%;
+}
+
+.confirmar-tudo__botoes {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* ---------- aviso flutuante com "Desfazer" ---------- */
+.aviso-flutuante {
+  position: fixed;
+  z-index: 20;
+  left: 16px;
+  right: 16px;
+  bottom: calc(144px + env(safe-area-inset-bottom)); /* acima do botão + */
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.aviso-flutuante__caixa {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 480px;
+  padding: 8px 8px 8px 16px;
+  border-radius: 12px;
+  background: var(--text); /* invertido: escuro no tema claro, claro no escuro */
+  color: var(--bg);
+  box-shadow: var(--sombra);
+  font-size: 14px;
+  animation: subir 0.2s ease-out;
+}
+
+.aviso-flutuante__acao {
+  border: none;
+  background: none;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 6px 4px;
+  white-space: nowrap;
+}
+
+.aviso-flutuante__caixa .btn-icone {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.aviso-flutuante__caixa .btn-icone:hover {
+  background: transparent;
+  color: inherit;
+  opacity: 1;
+}
+
+/* ---------- seletor de cor do cartão ---------- */
+.seletor-cor {
+  border: none;
+  padding: 0;
+  margin: 0 0 14px;
+}
+
+.seletor-cor legend {
+  padding: 0;
+  margin-bottom: 6px;
+}
+
+.seletor-cor__opcoes {
+  display: flex;
+  gap: 10px;
+}
+
+.seletor-cor__item {
+  cursor: pointer;
+}
+
+/* O rádio fica invisível mas continua lá (teclado e leitor de tela) */
+.seletor-cor__item input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.seletor-cor__item span {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.seletor-cor__item input:checked + span {
+  box-shadow: 0 0 0 2px var(--text);
+}
+
+.seletor-cor__item input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---------- gráfico: próximos meses (barras empilhadas) ---------- */
+.compromissos__legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 12px;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+
+.compromissos__legenda i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+.compromissos__legenda .compromissos__legenda-linha {
+  width: 14px;
+  height: 0;
+  border-radius: 0;
+  border-top: 2px dashed var(--text-2);
+  vertical-align: 3px;
+}
+
+.compromissos__plot {
+  position: relative;
+  height: 170px;
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.compromissos__salario {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px dashed var(--text-2);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.compromissos__coluna {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 2px; /* espaço de 2px entre os segmentos empilhados */
+  padding: 0 4px; /* px, não %: padding em % é relativo à largura do PAI (o gráfico todo) */
+  border: none;
+  border-radius: 8px 8px 0 0;
+  background: none;
+  cursor: pointer;
+}
+
+.compromissos__coluna:hover,
+.compromissos__coluna[aria-current] {
+  background: var(--surface-2);
+}
+
+.compromissos__total {
+  font-size: 11px;
+  color: var(--text-2);
+  white-space: nowrap;
+  margin-bottom: 2px;
+}
+
+.compromissos__seg {
+  display: block;
+  width: 100%;
+  max-width: 44px;
+  flex-shrink: 0;
+}
+
+/* só o topo da pilha é arredondado; a base encosta no eixo */
+.compromissos__seg--topo {
+  border-radius: 4px 4px 0 0;
+}
+
+.compromissos__seg--cartoes {
+  background: var(--serie-1);
+}
+
+.compromissos__seg--contas {
+  background: var(--serie-2);
+}
+
+.compromissos__meses {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.compromissos__meses span {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.compromissos__meses .ativo {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.compromissos__detalhe {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.compromissos__tabela {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.compromissos__tabela summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.compromissos__tabela table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+}
+
+.compromissos__tabela th,
+.compromissos__tabela td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+}
+
+.compromissos__tabela th:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+
+.compromissos__tabela thead th {
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+/* ---------- gráfico: para onde vai a grana (barras horizontais) ---------- */
+.categorias {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.categorias__item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  row-gap: 4px;
+  align-items: center;
+}
+
+.categorias__icone {
+  grid-row: 1 / 3;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  display: grid;
+  place-items: center;
+}
+
+.categorias__nome {
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.categorias__valor {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.categorias__valor .texto-3 {
+  font-weight: 400;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.categorias__trilho {
+  grid-column: 2 / 4;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.categorias__barra {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+/* Teclas de atalho (menu lateral) */
+kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 11px;
+  text-align: center;
+  color: var(--text-2);
+  background: var(--surface);
+}
+
 /* ============================ FORMULÁRIOS ============================ */
 
 .campo {
@@ -891,10 +1295,15 @@ p {
 .lateral__rodape {
   margin-top: auto;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 12px;
   padding: 0 8px;
   font-size: 12px;
   color: var(--text-3);
+}
+
+.lateral__atalhos {
+  line-height: 1.9;
 }
 
 /* ---------- área de conteúdo ---------- */
@@ -918,6 +1327,18 @@ p {
   font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+
+.barra-topo__acoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* No desktop o aviso de desfazer fica no rodapé, sem o botão + para desviar */
+.layout-desktop ~ .aviso-flutuante {
+  bottom: 24px;
+  left: 248px;
 }
 
 /* No desktop o seletor de mês fica à direita do título, sem grudar no topo */

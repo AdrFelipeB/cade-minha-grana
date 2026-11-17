@@ -1,5 +1,6 @@
 import { labelMes } from "../../lib/meses";
 import { brl } from "../../lib/valores";
+import BotaoPagarTudo from "../comum/BotaoPagarTudo";
 import EstadoVazio from "../comum/EstadoVazio";
 import FormConta from "./FormConta";
 import ItemConta from "./ItemConta";
@@ -19,13 +20,24 @@ export default function TelaContas({
   onSalvarOverride,
   onRemoverOverride,
   onTogglePago,
-  onRemover,
+  onPagarTodas,
+  onEditar,
   onAdicionar,
 }) {
   const { gastosDoMes, totalContas, isPago } = resumo;
   const pagas = gastosDoMes.filter((g) => isPago(g.id));
+  const pendentes = gastosDoMes.filter((g) => !isPago(g.id));
   const totalPago = pagas.reduce((s, g) => s + g.valorNoMes, 0);
   const temFixa = gastosDoMes.some((g) => g.tipo === "fixo");
+
+  const pagarTodas = (
+    <BotaoPagarTudo
+      rotulo="Pagar todas"
+      quantidade={pendentes.length}
+      total={totalContas - totalPago}
+      onConfirmar={() => onPagarTodas(pendentes.map((g) => g.id))}
+    />
+  );
 
   const lista =
     gastosDoMes.length === 0 ? (
@@ -52,7 +64,7 @@ export default function TelaContas({
               onSalvarOverride={() => onSalvarOverride(g.id)}
               onRemoverOverride={() => onRemoverOverride(g.id)}
               onTogglePago={() => onTogglePago(g.id)}
-              onRemover={() => onRemover(g.id)}
+              onEditar={() => onEditar(g.id)}
             />
           ))}
         </div>
@@ -84,7 +96,7 @@ export default function TelaContas({
             <div className="barra" style={{ margin: "10px 0" }} aria-hidden="true">
               <div className="barra__preenchimento" style={{ width: `${pct}%`, background: "var(--success)" }} />
             </div>
-            <div className="par-valores">
+            <div className="par-valores" style={{ marginBottom: pendentes.length ? 14 : 0 }}>
               <span>
                 Pago <strong className="num">{brl(totalPago)}</strong>
               </span>
@@ -92,6 +104,7 @@ export default function TelaContas({
                 Falta <strong className="num">{brl(totalContas - totalPago)}</strong>
               </span>
             </div>
+            {pagarTodas}
           </section>
 
           <h2 className="secao-titulo">Nova conta</h2>
@@ -112,9 +125,12 @@ export default function TelaContas({
         </span>
       </div>
       {gastosDoMes.length > 0 && (
-        <p className="rotulo" style={{ margin: "0 2px 8px" }}>
-          {pagas.length} de {gastosDoMes.length} pagas neste mês
-        </p>
+        <div className="topo-lista">
+          <p className="rotulo">
+            {pagas.length} de {gastosDoMes.length} pagas neste mês
+          </p>
+          {pagarTodas}
+        </div>
       )}
       {lista}
     </>

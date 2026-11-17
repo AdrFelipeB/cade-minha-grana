@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { addMeses, labelMes } from "../../lib/meses";
 import { brl, calcularParcelas, parseValor } from "../../lib/valores";
+import { CampoCategoria, RodapeForm } from "../comum/CamposComuns";
 
 // Valor da 1ª parcela para a prévia "10x de R$ X" (ou null se o valor é inválido)
 function valorParcelaPreview(valor, parcelas) {
@@ -10,8 +11,9 @@ function valorParcelaPreview(valor, parcelas) {
   return calcularParcelas(v, n)[0];
 }
 
-/* Formulário controlado de nova compra (à vista ou parcelada). */
-export default function FormCompra({ valores, cartoes, onChange, onSalvar }) {
+/* Formulário controlado de compra (à vista ou parcelada).
+   Serve para criar e para editar; na edição, `onExcluir` mostra o link de excluir. */
+export default function FormCompra({ valores, cartoes, onChange, onSalvar, onExcluir }) {
   const id = useId();
   const [erro, setErro] = useState("");
   const set = (campo) => (v) => {
@@ -86,15 +88,18 @@ export default function FormCompra({ valores, cartoes, onChange, onSalvar }) {
         </div>
       </div>
 
-      <div className="campo">
-        <label htmlFor={`${id}-mes`}>{nParcelas > 1 ? "1ª parcela em" : "Mês da fatura"}</label>
-        <input
-          id={`${id}-mes`}
-          className="input"
-          type="month"
-          value={valores.mes}
-          onChange={(e) => set("mes")(e.target.value)}
-        />
+      <div className="grade-2">
+        <div className="campo">
+          <label htmlFor={`${id}-mes`}>{nParcelas > 1 ? "1ª parcela em" : "Mês da fatura"}</label>
+          <input
+            id={`${id}-mes`}
+            className="input"
+            type="month"
+            value={valores.mes}
+            onChange={(e) => set("mes")(e.target.value)}
+          />
+        </div>
+        <CampoCategoria id={`${id}-cat`} valor={valores.categoria} onChange={set("categoria")} />
       </div>
 
       {preview && nParcelas > 1 && (
@@ -110,9 +115,11 @@ export default function FormCompra({ valores, cartoes, onChange, onSalvar }) {
         </p>
       )}
 
-      <button type="submit" className="btn btn--primario btn--bloco">
-        Salvar compra
-      </button>
+      <RodapeForm
+        textoSalvar={onExcluir ? "Salvar alterações" : "Salvar compra"}
+        onExcluir={onExcluir}
+        textoExcluir="Excluir compra (todas as parcelas)"
+      />
     </form>
   );
 }

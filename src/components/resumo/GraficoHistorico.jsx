@@ -1,8 +1,5 @@
 import { labelMes, MESES } from "../../lib/meses";
-import { brl } from "../../lib/valores";
-
-const brlCurto = (v) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+import { brl, brlCurto } from "../../lib/valores";
 
 /* Gráfico de barras simples (só CSS, sem biblioteca) dos últimos meses.
    Cada barra é um botão: clicar leva até aquele mês. A altura é

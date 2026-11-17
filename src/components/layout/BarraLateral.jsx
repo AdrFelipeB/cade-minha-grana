@@ -36,10 +36,16 @@ export default function BarraLateral({ tela, onChange, alertaAjustes, onAdiciona
         ))}
       </nav>
 
-      <p className="lateral__rodape">
-        <IconLock size={14} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
-        Seus dados ficam só neste aparelho.
-      </p>
+      <div className="lateral__rodape">
+        <p className="lateral__atalhos">
+          Atalhos: <kbd>N</kbd> novo · <kbd>←</kbd> <kbd>→</kbd> mês · <kbd>1</kbd>–<kbd>4</kbd> telas ·{" "}
+          <kbd>O</kbd> ocultar valores
+        </p>
+        <p style={{ display: "flex", gap: 8 }}>
+          <IconLock size={14} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+          Seus dados ficam só neste aparelho.
+        </p>
+      </div>
     </aside>
   );
 }

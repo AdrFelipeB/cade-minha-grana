@@ -2,6 +2,8 @@ import { corComprometimento } from "../../cores";
 import { labelMes } from "../../lib/meses";
 import { brl } from "../../lib/valores";
 import EstadoVazio from "../comum/EstadoVazio";
+import GraficoCategorias from "./GraficoCategorias";
+import GraficoCompromissos from "./GraficoCompromissos";
 import GraficoHistorico from "./GraficoHistorico";
 import ListaOrigens from "./ListaOrigens";
 import ListaPendentes from "./ListaPendentes";
@@ -17,20 +19,24 @@ function Metrica({ rotulo, valor, classeValor = "", children }) {
   );
 }
 
-/* Resumo no desktop: indicadores lado a lado no topo e, abaixo,
-   origens dos gastos (esquerda) + gráfico dos últimos meses (direita). */
+/* Resumo no desktop: indicadores lado a lado no topo e, abaixo, duas colunas:
+   esquerda = origens dos gastos + o que falta pagar;
+   direita = gráficos (últimos meses, próximos meses, categorias). */
 export default function ResumoDesktop({
   mesAtual,
   cartoes,
   salario,
   resumo,
   historico,
+  compromissos,
+  totaisCategoria,
   onAbrirContas,
   onAbrirCartao,
   onAdicionar,
   onDefinirSalario,
   onSelecionarMes,
   onTogglePago,
+  onPagarTudo,
 }) {
   const { totalGeral, totalCartoes, totalContas, totalPago, totalRestante, sobra, pctComprometido } =
     resumo;
@@ -68,7 +74,11 @@ export default function ResumoDesktop({
           </div>
         </Metrica>
 
-        <Metrica rotulo="Renda comprometida" valor={salario > 0 ? `${pctComprometido.toFixed(0)}%` : "—"} classeValor={salario > 0 ? "" : "texto-3"}>
+        <Metrica
+          rotulo="Renda comprometida"
+          valor={salario > 0 ? `${pctComprometido.toFixed(0)}%` : "—"}
+          classeValor={salario > 0 ? "" : "texto-3"}
+        >
           {salario > 0 ? (
             <div
               className="barra"
@@ -126,8 +136,14 @@ export default function ResumoDesktop({
                 onAbrirContas={onAbrirContas}
                 onAbrirCartao={onAbrirCartao}
               />
-              <h2 className="secao-titulo">A pagar em {nomeMes}</h2>
-              <ListaPendentes cartoes={cartoes} resumo={resumo} onTogglePago={onTogglePago} />
+              <ListaPendentes
+                titulo={`A pagar em ${nomeMes}`}
+                cartoes={cartoes}
+                mesAtual={mesAtual}
+                resumo={resumo}
+                onTogglePago={onTogglePago}
+                onPagarTudo={onPagarTudo}
+              />
             </>
           )}
         </div>
@@ -135,11 +151,21 @@ export default function ResumoDesktop({
         <div>
           <h2 className="secao-titulo">Últimos meses</h2>
           <section className="card" aria-label="Gastos dos últimos meses">
-            <GraficoHistorico
-              historico={historico}
-              mesAtual={mesAtual}
+            <GraficoHistorico historico={historico} mesAtual={mesAtual} onSelecionarMes={onSelecionarMes} />
+          </section>
+
+          <h2 className="secao-titulo">Próximos meses</h2>
+          <section className="card" aria-label="Quanto já está comprometido nos próximos meses">
+            <GraficoCompromissos
+              compromissos={compromissos}
+              salario={salario}
               onSelecionarMes={onSelecionarMes}
             />
+          </section>
+
+          <h2 className="secao-titulo">Para onde vai a grana em {nomeMes}</h2>
+          <section className="card" aria-label="Gastos por categoria">
+            <GraficoCategorias totais={totaisCategoria} />
           </section>
         </div>
       </div>

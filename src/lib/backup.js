@@ -72,22 +72,38 @@ export function gerarBackup({ cartoes, compras, gastos, pagos, salario }) {
 
 /* -------- importar -------- */
 
-function validarCartoes(lista, qtdGradientes) {
+/* Campos opcionais (versão 2): se vierem inválidos, são simplesmente
+   ignorados em vez de recusar o backup inteiro. */
+const ehDia = (v) => Number.isInteger(v) && v >= 1 && v <= 31;
+
+function copiarOpcionais(destino, origem, { categorias }) {
+  if (ehTexto(origem.categoria) && categorias.includes(origem.categoria)) {
+    destino.categoria = origem.categoria;
+  }
+  if (ehDia(origem.diaVencimento)) destino.diaVencimento = origem.diaVencimento;
+  if (ehNumero(origem.limite) && origem.limite > 0) destino.limite = origem.limite;
+  return destino;
+}
+
+function validarCartoes(lista, opcoes) {
+  const { qtdGradientes } = opcoes;
   exigir(Array.isArray(lista), "a lista de cartões está ausente ou inválida.");
   return lista.map((c, i) => {
     exigir(ehObjeto(c) && ehTexto(c.id) && ehTexto(c.nome) && c.nome.trim(),
       `o cartão nº ${i + 1} está incompleto.`);
     const gradienteOk = Number.isInteger(c.gradiente) && c.gradiente >= 0 && c.gradiente < qtdGradientes;
-    return {
+    const cartao = {
       id: c.id,
       nome: c.nome,
       final: ehTexto(c.final) ? c.final.replace(/\D/g, "").slice(0, 4) : "",
       gradiente: gradienteOk ? c.gradiente : i % qtdGradientes,
     };
+    // cartão não tem categoria: só vencimento e limite
+    return copiarOpcionais(cartao, { diaVencimento: c.diaVencimento, limite: c.limite }, opcoes);
   });
 }
 
-function validarCompras(lista, idsCartoes) {
+function validarCompras(lista, idsCartoes, opcoes) {
   exigir(Array.isArray(lista), "a lista de compras está ausente ou inválida.");
   return lista.map((c, i) => {
     const ok =
@@ -100,7 +116,7 @@ function validarCompras(lista, idsCartoes) {
     exigir(ok, `a compra nº ${i + 1} está incompleta ou com valores inválidos.`);
     exigir(idsCartoes.has(c.cartaoId),
       `a compra "${c.descricao}" pertence a um cartão que não está no backup.`);
-    return {
+    const compra = {
       id: c.id,
       cartaoId: c.cartaoId,
       descricao: c.descricao,
@@ -108,10 +124,11 @@ function validarCompras(lista, idsCartoes) {
       parcelas: c.parcelas,
       primeiroMes: c.primeiroMes,
     };
+    return copiarOpcionais(compra, { categoria: c.categoria }, opcoes);
   });
 }
 
-function validarGastos(lista) {
+function validarGastos(lista, opcoes) {
   exigir(Array.isArray(lista), "a lista de contas está ausente ou inválida.");
   return lista.map((g, i) => {
     const base =
@@ -120,7 +137,8 @@ function validarGastos(lista) {
 
     if (g.tipo === "momentaneo") {
       exigir(ehMes(g.mes), `a conta "${g.descricao}" está sem mês válido.`);
-      return { id: g.id, descricao: g.descricao, valor: g.valor, tipo: "momentaneo", mes: g.mes };
+      const avulsa = { id: g.id, descricao: g.descricao, valor: g.valor, tipo: "momentaneo", mes: g.mes };
+      return copiarOpcionais(avulsa, { categoria: g.categoria, diaVencimento: g.diaVencimento }, opcoes);
     }
 
     exigir(g.tipo === "fixo", `a conta "${g.descricao}" tem um tipo desconhecido.`);
@@ -133,7 +151,7 @@ function validarGastos(lista) {
         Object.entries(g.overrides).filter(([mes, v]) => ehMes(mes) && ehNumero(v) && v > 0)
       );
     }
-    return conta;
+    return copiarOpcionais(conta, { categoria: g.categoria, diaVencimento: g.diaVencimento }, opcoes);
   });
 }
 
@@ -149,7 +167,9 @@ function validarPagos(pagos) {
 
 /* Lê o texto de um arquivo de backup. Retorna { dados, exportadoEm }
    ou lança um Error com mensagem em português para mostrar ao usuário. */
-export function lerBackup(texto, { qtdGradientes }) {
+// opcoes: { qtdGradientes: nº de cores de cartão, categorias: ids de categoria válidos }
+export function lerBackup(texto, opcoes) {
+  opcoes = { categorias: [], ...opcoes };
   let obj;
   try {
     obj = JSON.parse(texto);
@@ -174,9 +194,9 @@ export function lerBackup(texto, { qtdGradientes }) {
       );
     }
 
-    const cartoes = validarCartoes(dados.cartoes ?? [], qtdGradientes);
-    const compras = validarCompras(dados.compras ?? [], new Set(cartoes.map((c) => c.id)));
-    const gastos = validarGastos(dados.gastos ?? []);
+    const cartoes = validarCartoes(dados.cartoes ?? [], opcoes);
+    const compras = validarCompras(dados.compras ?? [], new Set(cartoes.map((c) => c.id)), opcoes);
+    const gastos = validarGastos(dados.gastos ?? [], opcoes);
     const pagos = validarPagos(dados.pagos);
     const salario = dados.salario ?? 0;
     exigir(ehNumero(salario) && salario >= 0, "o salário está inválido.");

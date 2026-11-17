@@ -1,14 +1,15 @@
 import { useId, useState } from "react";
+import { CampoCategoria, CampoDiaVencimento, RodapeForm } from "../comum/CamposComuns";
 
 const TIPOS = [
   { id: "fixo", rotulo: "Fixa", dica: "repete todo mês" },
   { id: "momentaneo", rotulo: "Avulsa", dica: "só em um mês" },
 ];
 
-/* Formulário controlado de nova conta (fixa ou avulsa).
+/* Formulário controlado de conta (fixa ou avulsa), para criar ou editar.
    Os valores moram no App (sobrevivem a fechar o painel sem salvar);
    aqui fica só a mensagem de erro, que é passageira. */
-export default function FormConta({ valores, onChange, onSalvar }) {
+export default function FormConta({ valores, onChange, onSalvar, onExcluir }) {
   const id = useId();
   const [erro, setErro] = useState("");
   const set = (campo) => (v) => {
@@ -79,7 +80,17 @@ export default function FormConta({ valores, onChange, onSalvar }) {
         </div>
       </div>
 
-      {fixo && (
+      <div className="grade-2">
+        <CampoCategoria id={`${id}-cat`} valor={valores.categoria} onChange={set("categoria")} />
+        <CampoDiaVencimento
+          id={`${id}-dia`}
+          valor={valores.diaVencimento}
+          onChange={set("diaVencimento")}
+          rotulo={fixo ? "Vence todo dia" : "Vence no dia"}
+        />
+      </div>
+
+      {fixo && !onExcluir && (
         <p className="dica">
           Valor muda todo mês, como luz e água? Cadastre uma média e ajuste o valor exato
           mês a mês tocando nele na lista.
@@ -92,9 +103,11 @@ export default function FormConta({ valores, onChange, onSalvar }) {
         </p>
       )}
 
-      <button type="submit" className="btn btn--primario btn--bloco">
-        Salvar conta
-      </button>
+      <RodapeForm
+        textoSalvar={onExcluir ? "Salvar alterações" : "Salvar conta"}
+        onExcluir={onExcluir}
+        textoExcluir={fixo ? "Excluir conta (de todos os meses)" : "Excluir conta"}
+      />
     </form>
   );
 }

@@ -1,25 +1,70 @@
-import { IconArrowLeft, IconPlus } from "@tabler/icons-react";
+import { IconArrowLeft, IconPencil, IconPlus } from "@tabler/icons-react";
 import { corCartao } from "../../cores";
 import { labelMes } from "../../lib/meses";
 import { brl } from "../../lib/valores";
+import { situacaoVencimento } from "../../lib/vencimentos";
+import BotaoPagarTudo from "../comum/BotaoPagarTudo";
 import EstadoVazio from "../comum/EstadoVazio";
+import SeloVencimento from "../comum/SeloVencimento";
 import ItemParcela from "./ItemParcela";
 
-/* Fatura de um cartão no mês: total, pago/falta e os lançamentos. */
+/* Barra de limite: quanto do limite as compras ainda ocupam. */
+function UsoLimite({ limite, usado }) {
+  const pct = Math.min(100, (usado / limite) * 100);
+  const disponivel = limite - usado;
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div className="par-valores">
+        <span>
+          Limite usado <strong className="num">{brl(usado)}</strong> de{" "}
+          <span className="num">{brl(limite)}</span>
+        </span>
+        <span>
+          {disponivel >= 0 ? "Disponível " : "Acima do limite "}
+          <strong className={`num ${disponivel < 0 ? "negativo" : ""}`}>{brl(Math.abs(disponivel))}</strong>
+        </span>
+      </div>
+      <div
+        className="barra"
+        style={{ margin: "8px 0 0" }}
+        role="progressbar"
+        aria-label="Limite usado"
+        aria-valuenow={Math.round(pct)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div
+          className="barra__preenchimento"
+          style={{
+            width: `${pct}%`,
+            background: pct < 70 ? "var(--accent)" : pct < 90 ? "var(--warning-fill)" : "var(--danger-fill)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* Fatura de um cartão no mês: total, vencimento, pago/falta, limite e lançamentos. */
 export default function DetalheCartao({
   cartao,
   mesAtual,
   resumo,
+  limiteUsado,
   desktop = false, // no desktop a lista fica ao lado: sem "voltar", com botão de nova compra
   onVoltar,
   onNovaCompra,
-  onRemoverCartao,
+  onEditarCartao,
   onTogglePago,
-  onRemoverCompra,
+  onPagarFatura,
+  onEditarCompra,
 }) {
   const { parcelasDoMesPorCartao, isPago } = resumo;
   const { itens, subtotal } = parcelasDoMesPorCartao[cartao.id] || { itens: [], subtotal: 0 };
-  const pago = itens.filter((p) => isPago(p.id)).reduce((s, p) => s + p.valorParcela, 0);
+  const pendentes = itens.filter((p) => !isPago(p.id));
+  const pago = subtotal - pendentes.reduce((s, p) => s + p.valorParcela, 0);
+  const faturaPaga = itens.length > 0 && pendentes.length === 0;
+  const situacao = itens.length > 0 ? situacaoVencimento(mesAtual, cartao.diaVencimento, faturaPaga) : null;
   const Titulo = desktop ? "h2" : "h1";
 
   return (
@@ -39,14 +84,28 @@ export default function DetalheCartao({
             {cartao.nome}
           </Titulo>
           {cartao.final && <span className="texto-3 num">•••• {cartao.final}</span>}
-          {desktop && (
-            <button type="button" className="btn btn--pequeno" onClick={onNovaCompra} style={{ marginLeft: "auto" }}>
-              <IconPlus size={16} aria-hidden="true" />
-              Nova compra
+          <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+            {desktop && (
+              <button type="button" className="btn btn--pequeno" onClick={onNovaCompra}>
+                <IconPlus size={16} aria-hidden="true" />
+                Nova compra
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn--pequeno"
+              onClick={onEditarCartao}
+              aria-label={`Editar cartão ${cartao.nome}`}
+            >
+              <IconPencil size={16} aria-hidden="true" />
+              {desktop && "Editar"}
             </button>
-          )}
+          </span>
         </div>
-        <div className="rotulo">Fatura de {labelMes(mesAtual)}</div>
+
+        <div className="rotulo">
+          Fatura de {labelMes(mesAtual)} {situacao && <SeloVencimento situacao={faturaPaga ? { tipo: "pago", texto: "paga" } : situacao} />}
+        </div>
         <div className="valor-grande num">{brl(subtotal)}</div>
         {subtotal > 0 && (
           <div className="par-valores" style={{ marginTop: 8 }}>
@@ -58,6 +117,19 @@ export default function DetalheCartao({
             </span>
           </div>
         )}
+
+        {pendentes.length > 0 && (
+          <div style={{ marginTop: 14 }}>
+            <BotaoPagarTudo
+              rotulo="Pagar fatura"
+              quantidade={pendentes.length}
+              total={subtotal - pago}
+              onConfirmar={() => onPagarFatura(pendentes.map((p) => p.id))}
+            />
+          </div>
+        )}
+
+        {cartao.limite > 0 && <UsoLimite limite={cartao.limite} usado={limiteUsado} />}
       </section>
 
       {itens.length === 0 ? (
@@ -79,21 +151,12 @@ export default function DetalheCartao({
                 parcela={p}
                 pago={isPago(p.id)}
                 onTogglePago={() => onTogglePago(p.id)}
-                onRemover={() => onRemoverCompra(p.id)}
+                onEditar={() => onEditarCompra(p.id)}
               />
             ))}
           </div>
         </>
       )}
-
-      <button
-        type="button"
-        className="btn btn--link btn--perigo"
-        onClick={onRemoverCartao}
-        style={{ margin: "12px 2px" }}
-      >
-        Remover este cartão
-      </button>
     </>
   );
 }

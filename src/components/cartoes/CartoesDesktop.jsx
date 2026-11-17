@@ -12,12 +12,14 @@ export default function CartoesDesktop({
   cartaoSelecionado,
   mesAtual,
   resumo,
+  limiteUsado,
   onSelecionar,
   onNovoCartao,
   onNovaCompra,
-  onRemoverCartao,
+  onEditarCartao,
   onTogglePago,
-  onRemoverCompra,
+  onPagarFatura,
+  onEditarCompra,
 }) {
   const { parcelasDoMesPorCartao } = resumo;
 
@@ -79,10 +81,12 @@ export default function CartoesDesktop({
             cartao={cartaoSelecionado}
             mesAtual={mesAtual}
             resumo={resumo}
+            limiteUsado={limiteUsado}
             onNovaCompra={onNovaCompra}
-            onRemoverCartao={onRemoverCartao}
+            onEditarCartao={onEditarCartao}
             onTogglePago={onTogglePago}
-            onRemoverCompra={onRemoverCompra}
+            onPagarFatura={onPagarFatura}
+            onEditarCompra={onEditarCompra}
           />
         )}
       </div>
