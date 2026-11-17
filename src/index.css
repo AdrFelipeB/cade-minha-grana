@@ -1,0 +1,16 @@
+/* Os estilos do app são inline (ver src/theme.js).
+   Aqui fica só o reset mínimo da página e o que estilo inline
+   não consegue fazer (pseudo-classes como :focus-visible). */
+html,
+body {
+  margin: 0;
+  background: #0e0b1e;
+}
+
+/* Anel de foco visível só para quem navega pelo teclado
+   (:focus-visible não aparece em cliques de mouse/toque). */
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid #c4b5fd;
+  outline-offset: 2px;
+}
