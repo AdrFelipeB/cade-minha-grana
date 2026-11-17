@@ -66,3 +66,7 @@ src/
 ```
 
 Feito com React 19 + Vite, ícones [Tabler](https://tabler.io/icons) e [vite-plugin-pwa](https://vite-pwa-org.netlify.app/).
+
+## Licença
+
+[MIT](LICENSE): pode usar, modificar e redistribuir, mantendo o aviso de copyright.
