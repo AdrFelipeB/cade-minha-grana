@@ -22,6 +22,20 @@ import { VERSAO_DADOS } from "./storage";
 
 export const APP_ID = "meus-gastos";
 export const TAMANHO_MAXIMO = 5 * 1024 * 1024; // 5 MB: muito acima de qualquer uso real
+export const DIAS_PARA_LEMBRAR_BACKUP = 30;
+
+export function diasDesde(iso) {
+  const ms = Date.now() - new Date(iso).getTime();
+  return Math.max(0, Math.floor(ms / 86_400_000));
+}
+
+// Lembrar de fazer backup: só se já existe algo a perder e nunca houve
+// backup (ou o último foi há mais de 30 dias).
+export function precisaDeBackup(dados, ultimoBackup) {
+  const temDados =
+    dados.cartoes.length > 0 || dados.compras.length > 0 || dados.gastos.length > 0 || dados.salario > 0;
+  return temDados && (!ultimoBackup || diasDesde(ultimoBackup) > DIAS_PARA_LEMBRAR_BACKUP);
+}
 
 const MES_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 const ehTexto = (v) => typeof v === "string";

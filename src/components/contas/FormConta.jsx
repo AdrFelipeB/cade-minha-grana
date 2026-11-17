@@ -1,103 +1,100 @@
-import { useId } from "react";
-import { GRAD_CONTAS, inputStyle, labelStyle, S, T } from "../../theme";
+import { useId, useState } from "react";
 
 const TIPOS = [
-  { id: "fixo", rotulo: "🔁 Fixo", dica: "repete todo mês" },
-  { id: "momentaneo", rotulo: "📌 Momentâneo", dica: "só neste mês" },
+  { id: "fixo", rotulo: "Fixa", dica: "repete todo mês" },
+  { id: "momentaneo", rotulo: "Avulsa", dica: "só em um mês" },
 ];
 
-/* Formulário controlado de nova conta (fixa ou momentânea). */
+/* Formulário controlado de nova conta (fixa ou avulsa).
+   Os valores moram no App (sobrevivem a fechar o painel sem salvar);
+   aqui fica só a mensagem de erro, que é passageira. */
 export default function FormConta({ valores, onChange, onSalvar }) {
-  const set = (campo) => (v) => onChange({ ...valores, [campo]: v });
-  const fixo = valores.tipo === "fixo";
   const id = useId();
+  const [erro, setErro] = useState("");
+  const set = (campo) => (v) => {
+    setErro("");
+    onChange({ ...valores, [campo]: v });
+  };
+  const fixo = valores.tipo === "fixo";
+
+  const enviar = (e) => {
+    e.preventDefault(); // não recarregar a página (comportamento padrão de <form>)
+    if (!onSalvar()) setErro("Informe a descrição e um valor maior que zero.");
+  };
 
   return (
-    <div style={{ ...S.painel, marginBottom: 16 }}>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <div style={{ flex: "2 1 200px" }}>
-          <label style={labelStyle} htmlFor={`${id}-desc`}>Descrição</label>
-          <input
-            id={`${id}-desc`}
-            value={valores.descricao}
-            onChange={(e) => set("descricao")(e.target.value)}
-            placeholder="Ex.: Aluguel"
-            style={inputStyle}
-          />
+    <form onSubmit={enviar} noValidate>
+      <div className="campo">
+        <span className="campo__rotulo" id={`${id}-tipo`}>
+          Tipo
+        </span>
+        <div className="segmentado" role="group" aria-labelledby={`${id}-tipo`}>
+          {TIPOS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              aria-pressed={valores.tipo === t.id}
+              onClick={() => set("tipo")(t.id)}
+            >
+              {t.rotulo}
+              <small>{t.dica}</small>
+            </button>
+          ))}
         </div>
-        <div style={{ flex: "1 1 120px" }}>
-          <label style={labelStyle} htmlFor={`${id}-valor`}>
-            {fixo ? "Valor padrão (R$)" : "Valor (R$)"}
-          </label>
+      </div>
+
+      <div className="campo">
+        <label htmlFor={`${id}-desc`}>Descrição</label>
+        <input
+          id={`${id}-desc`}
+          className="input"
+          value={valores.descricao}
+          onChange={(e) => set("descricao")(e.target.value)}
+          placeholder={fixo ? "Aluguel" : "IPTU"}
+          autoComplete="off"
+        />
+      </div>
+
+      <div className="grade-2">
+        <div className="campo">
+          <label htmlFor={`${id}-valor`}>{fixo ? "Valor mensal (R$)" : "Valor (R$)"}</label>
           <input
             id={`${id}-valor`}
+            className="input num"
             value={valores.valor}
             onChange={(e) => set("valor")(e.target.value)}
             placeholder="850,00"
             inputMode="decimal"
-            style={{ ...inputStyle, ...S.mono }}
+          />
+        </div>
+        <div className="campo">
+          <label htmlFor={`${id}-mes`}>{fixo ? "A partir de" : "Mês"}</label>
+          <input
+            id={`${id}-mes`}
+            className="input"
+            type="month"
+            value={valores.mes}
+            onChange={(e) => set("mes")(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Toggle fixo / momentâneo */}
-      <div style={{ marginTop: 12 }}>
-        <span style={labelStyle} id={`${id}-tipo`}>Tipo de gasto</span>
-        <div
-          role="group"
-          aria-labelledby={`${id}-tipo`}
-          style={{ display: "flex", gap: 8, marginTop: 6 }}
-        >
-          {TIPOS.map((t) => {
-            const ativo = valores.tipo === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => set("tipo")(t.id)}
-                aria-pressed={ativo}
-                style={{
-                  ...S.btn,
-                  flex: 1,
-                  background: ativo ? GRAD_CONTAS : "#141026",
-                  color: T.texto,
-                  border: `1px solid ${ativo ? "transparent" : T.border}`,
-                }}
-              >
-                {t.rotulo}
-                <span style={{ display: "block", fontSize: 11, fontWeight: 400, opacity: 0.8 }}>
-                  {t.dica}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        {fixo && (
-          <div style={{ fontSize: 12, color: T.textoSuave, marginTop: 6 }}>
-            💡 Contas fixas de valor variável (luz, água): cadastre com um valor médio e
-            ajuste o valor exato mês a mês na lista abaixo.
-          </div>
-        )}
-      </div>
+      {fixo && (
+        <p className="dica">
+          Valor muda todo mês, como luz e água? Cadastre uma média e ajuste o valor exato
+          mês a mês tocando nele na lista.
+        </p>
+      )}
 
-      <div style={{ marginTop: 12, maxWidth: 200 }}>
-        <label style={labelStyle} htmlFor={`${id}-mes`}>
-          {fixo ? "A partir de" : "Mês do gasto"}
-        </label>
-        <input
-          id={`${id}-mes`}
-          type="month"
-          value={valores.mes}
-          onChange={(e) => set("mes")(e.target.value)}
-          style={inputStyle}
-        />
-      </div>
+      {erro && (
+        <p className="erro" role="alert">
+          {erro}
+        </p>
+      )}
 
-      <button
-        onClick={onSalvar}
-        style={{ ...S.btn, background: GRAD_CONTAS, color: "#FFF", marginTop: 14 }}
-      >
+      <button type="submit" className="btn btn--primario btn--bloco">
         Salvar conta
       </button>
-    </div>
+    </form>
   );
 }

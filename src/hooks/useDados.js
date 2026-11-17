@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { loadData, saveData } from "../lib/storage";
 import { limparDadosAntigos } from "../lib/regras";
 import { centavos, uid } from "../lib/valores";
-import { GRADIENTES_CARTAO } from "../theme";
+import { CORES_CARTAO } from "../cores";
 
 /* Estado persistido do app + todas as ações que o modificam.
    Os componentes não mexem no formato dos dados diretamente:
@@ -28,7 +28,7 @@ export function useDados() {
       id: uid(),
       nome: nome.trim(),
       final: final.trim(),
-      gradiente: dados.cartoes.length % GRADIENTES_CARTAO.length,
+      gradiente: dados.cartoes.length % CORES_CARTAO.length, // índice da cor (nome herdado)
     };
     atualizar("cartoes", (l) => [...l, novo]);
     return novo;

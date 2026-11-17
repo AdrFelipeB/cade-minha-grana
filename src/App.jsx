@@ -1,28 +1,40 @@
 import { useState } from "react";
 import { useDados } from "./hooks/useDados";
 import { useHistorico, useResumoDoMes } from "./hooks/useResumoDoMes";
+import { precisaDeBackup } from "./lib/backup";
 import { addMeses, hojeMes } from "./lib/meses";
 import { MESES_RETENCAO } from "./lib/regras";
+import { lerUltimoBackup, registrarUltimoBackup } from "./lib/storage";
 import { parseValor } from "./lib/valores";
-import { T } from "./theme";
-import Cabecalho from "./components/Cabecalho";
-import NavegacaoMes from "./components/NavegacaoMes";
-import NavegacaoPrincipal from "./components/NavegacaoPrincipal";
-import SeletorCartoes from "./components/SeletorCartoes";
-import FormCartao from "./components/FormCartao";
-import AbaGeral from "./components/geral/AbaGeral";
-import AbaContas from "./components/contas/AbaContas";
-import AbaCartao from "./components/cartao/AbaCartao";
-import BackupDados from "./components/BackupDados";
+import SeletorMes from "./components/layout/SeletorMes";
+import BarraNavegacao from "./components/layout/BarraNavegacao";
+import BotaoAdicionar from "./components/layout/BotaoAdicionar";
+import Sheet from "./components/comum/Sheet";
+import EscolhaLancamento from "./components/EscolhaLancamento";
+import TelaResumo from "./components/resumo/TelaResumo";
+import TelaContas from "./components/contas/TelaContas";
+import FormConta from "./components/contas/FormConta";
+import TelaCartoes from "./components/cartoes/TelaCartoes";
+import DetalheCartao from "./components/cartoes/DetalheCartao";
+import FormCompra from "./components/cartoes/FormCompra";
+import FormCartao from "./components/cartoes/FormCartao";
+import TelaAjustes from "./components/ajustes/TelaAjustes";
 
 const FORM_CARTAO_VAZIO = { nome: "", final: "" };
-const formCompraVazio = (mes) => ({ descricao: "", valor: "", parcelas: 1, mes });
+const formCompraVazio = (mes, cartaoId = "") => ({ cartaoId, descricao: "", valor: "", parcelas: 1, mes });
 const formGastoVazio = (mes) => ({ descricao: "", valor: "", tipo: "fixo", mes });
 
-/* O App guarda o estado de *interface* (aba, mês, forms abertos, edições
-   em andamento) e repassa para as abas. Os *dados* ficam no hook useDados.
-   O estado dos formulários mora aqui (e não dentro de cada form) para que,
-   ao trocar de aba e voltar, o que você digitou continue lá — igual ao protótipo. */
+const TITULOS_SHEET = {
+  escolha: "O que você quer lançar?",
+  compra: "Nova compra",
+  conta: "Nova conta",
+  cartao: "Novo cartão",
+};
+
+/* O App guarda o estado de *interface* (tela, mês, painel aberto, rascunhos
+   dos formulários, edições em andamento) e repassa para as telas.
+   Os *dados* ficam no hook useDados. Os rascunhos dos formulários moram
+   aqui para sobreviverem a fechar o painel sem salvar. */
 export default function App() {
   const {
     dados,
@@ -38,27 +50,46 @@ export default function App() {
     togglePago,
     definirSalario,
   } = useDados();
-  const { cartoes, compras, gastos, salario } = dados;
+  const { cartoes, compras, gastos } = dados;
 
-  const [abaAtiva, setAbaAtiva] = useState("geral"); // "geral" | "contas" | id do cartão
+  // Navegação
+  const [tela, setTela] = useState("resumo"); // "resumo" | "contas" | "cartoes" | "ajustes"
+  const [cartaoAberto, setCartaoAberto] = useState(null); // id do cartão no detalhe
   const [mesAtual, setMesAtual] = useState(hojeMes);
+  const [focarSalario, setFocarSalario] = useState(false);
 
-  const [mostrarFormCartao, setMostrarFormCartao] = useState(false);
-  const [mostrarFormCompra, setMostrarFormCompra] = useState(false);
-  const [mostrarFormGasto, setMostrarFormGasto] = useState(false);
+  // Painel (sheet) e rascunhos
+  const [sheet, setSheet] = useState(null); // null | "escolha" | "compra" | "conta" | "cartao"
   const [formCartao, setFormCartao] = useState(FORM_CARTAO_VAZIO);
   const [formCompra, setFormCompra] = useState(() => formCompraVazio(hojeMes()));
   const [formGasto, setFormGasto] = useState(() => formGastoVazio(hojeMes()));
-
-  const [salarioInput, setSalarioInput] = useState(null); // null = não está editando
   const [edicaoOverride, setEdicaoOverride] = useState(null); // { id, valor } | null
+
+  // Backup
+  const [ultimoBackup, setUltimoBackup] = useState(lerUltimoBackup);
+  const lembrarBackup = precisaDeBackup(dados, ultimoBackup);
 
   const mesMinimo = addMeses(hojeMes(), -MESES_RETENCAO);
   const resumo = useResumoDoMes(dados, mesAtual);
   const historico = useHistorico(compras, gastos);
-  const cartaoAtivo = cartoes.find((c) => c.id === abaAtiva);
+  const cartaoAtivo = tela === "cartoes" ? cartoes.find((c) => c.id === cartaoAberto) : null;
 
-  /* -------- handlers -------- */
+  /* -------- navegação -------- */
+  const navegar = (novaTela) => {
+    setTela(novaTela);
+    setCartaoAberto(null);
+    setEdicaoOverride(null);
+    setFocarSalario(false);
+    window.scrollTo(0, 0);
+  };
+
+  const abrirCartao = (id) => {
+    setTela("cartoes");
+    setCartaoAberto(id);
+    setEdicaoOverride(null);
+    window.scrollTo(0, 0);
+  };
+
   // Trocar de mês cancela a edição de valor em andamento; senão o OK
   // salvaria o override no mês novo em vez do mês em que você começou.
   const mudarMes = (mes) => {
@@ -66,36 +97,54 @@ export default function App() {
     setEdicaoOverride(null);
   };
 
-  const salvarCartao = () => {
-    const novo = adicionarCartao(formCartao);
-    if (!novo) return;
-    setFormCartao(FORM_CARTAO_VAZIO);
-    setMostrarFormCartao(false);
-    setAbaAtiva(novo.id);
+  /* -------- abrir painéis -------- */
+  const abrirNovoCartao = () => setSheet("cartao");
+
+  const abrirNovaCompra = (cartaoId) => {
+    if (cartoes.length === 0) return abrirNovoCartao();
+    const existe = (id) => cartoes.some((c) => c.id === id);
+    const id = existe(cartaoId) ? cartaoId : existe(formCompra.cartaoId) ? formCompra.cartaoId : cartoes[0].id;
+    setFormCompra({ ...formCompra, cartaoId: id, mes: mesAtual });
+    setSheet("compra");
   };
 
-  const excluirCartao = (id) => {
-    if (!confirm("Remover este cartão e todas as compras dele?")) return;
-    removerCartao(id);
-    setAbaAtiva("geral");
+  const abrirNovaConta = () => {
+    setFormGasto({ ...formGasto, mes: mesAtual });
+    setSheet("conta");
+  };
+
+  // O "+" faz o que faz sentido para a tela atual
+  const adicionar = () => {
+    if (tela === "contas") abrirNovaConta();
+    else if (cartaoAtivo) abrirNovaCompra(cartaoAtivo.id);
+    else setSheet("escolha");
+  };
+  const rotuloAdicionar =
+    tela === "contas" ? "Adicionar conta" : cartaoAtivo ? "Adicionar compra" : "Adicionar";
+
+  /* -------- salvar (retornam true/false para o form mostrar erro) -------- */
+  const salvarCartao = () => {
+    const novo = adicionarCartao(formCartao);
+    if (!novo) return false;
+    setFormCartao(FORM_CARTAO_VAZIO);
+    setSheet(null);
+    abrirCartao(novo.id);
+    return true;
   };
 
   const salvarCompra = () => {
     const ok = adicionarCompra({
-      cartaoId: abaAtiva,
+      cartaoId: formCompra.cartaoId,
       descricao: formCompra.descricao,
       valor: parseValor(formCompra.valor),
       parcelas: formCompra.parcelas,
       primeiroMes: formCompra.mes,
     });
-    if (!ok) return;
-    setFormCompra(formCompraVazio(mesAtual));
-    setMostrarFormCompra(false);
-  };
-
-  const excluirCompra = (id) => {
-    if (!confirm("Remover esta compra (todas as parcelas)?")) return;
-    removerCompra(id);
+    if (ok) {
+      setFormCompra(formCompraVazio(mesAtual, formCompra.cartaoId));
+      setSheet(null);
+    }
+    return ok;
   };
 
   const salvarGasto = () => {
@@ -105,9 +154,23 @@ export default function App() {
       tipo: formGasto.tipo,
       mes: formGasto.mes,
     });
-    if (!ok) return;
-    setFormGasto(formGastoVazio(mesAtual));
-    setMostrarFormGasto(false);
+    if (ok) {
+      setFormGasto(formGastoVazio(mesAtual));
+      setSheet(null);
+    }
+    return ok;
+  };
+
+  /* -------- excluir (com confirmação) -------- */
+  const excluirCartao = (id) => {
+    if (!confirm("Remover este cartão e todas as compras dele?")) return;
+    removerCartao(id);
+    setCartaoAberto(null);
+  };
+
+  const excluirCompra = (id) => {
+    if (!confirm("Remover esta compra (todas as parcelas)?")) return;
+    removerCompra(id);
   };
 
   const excluirGasto = (id) => {
@@ -115,11 +178,12 @@ export default function App() {
     const msg =
       g?.tipo === "fixo"
         ? "Remover esta conta fixa? Ela deixará de aparecer em todos os meses."
-        : "Remover este gasto?";
+        : "Remover esta conta?";
     if (!confirm(msg)) return;
     removerGasto(id);
   };
 
+  /* -------- valor de conta fixa só neste mês -------- */
   const confirmarOverride = (gastoId) => {
     salvarOverride(gastoId, mesAtual, parseValor(edicaoOverride?.valor ?? ""));
     setEdicaoOverride(null);
@@ -130,111 +194,123 @@ export default function App() {
     setEdicaoOverride(null);
   };
 
-  // Depois de restaurar, volta para a visão geral do mês atual e fecha
-  // qualquer edição aberta (ela poderia apontar para itens que não existem mais).
-  const importarBackup = (novos) => {
-    substituirDados(novos);
-    setAbaAtiva("geral");
-    setMesAtual(hojeMes());
-    setEdicaoOverride(null);
-    setSalarioInput(null);
-    setMostrarFormCartao(false);
-    setMostrarFormCompra(false);
-    setMostrarFormGasto(false);
+  /* -------- backup -------- */
+  const backupExportado = (iso) => {
+    registrarUltimoBackup(iso);
+    setUltimoBackup(iso);
   };
 
-  const salvarSalario = () => {
-    definirSalario(parseValor(salarioInput ?? ""));
-    setSalarioInput(null);
+  // Depois de restaurar, volta ao resumo do mês atual e fecha o que estiver aberto
+  const importarBackup = (novos) => {
+    substituirDados(novos);
+    setMesAtual(hojeMes());
+    setSheet(null);
+    navegar("resumo");
   };
+
+  const togglePagoNoMes = (id) => togglePago(mesAtual, id);
 
   /* ============================ RENDER ============================ */
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: `radial-gradient(1200px 500px at 80% -10%, rgba(124,58,237,0.25), transparent), ${T.bg}`,
-        color: T.texto,
-        fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
-        padding: "28px 16px 72px",
-      }}
-    >
-      <div style={{ maxWidth: 780, margin: "0 auto" }}>
-        <Cabecalho />
-
-        <NavegacaoMes mesAtual={mesAtual} mesMinimo={mesMinimo} onChange={mudarMes} />
-
-        <NavegacaoPrincipal abaAtiva={abaAtiva} onChange={setAbaAtiva} />
-
-        <SeletorCartoes
-          cartoes={cartoes}
-          abaAtiva={abaAtiva}
-          onSelecionar={setAbaAtiva}
-          onNovoCartao={() => setMostrarFormCartao(!mostrarFormCartao)}
-          formAberto={mostrarFormCartao}
-        />
-
-        {mostrarFormCartao && (
-          <FormCartao valores={formCartao} onChange={setFormCartao} onSalvar={salvarCartao} />
+    <>
+      <main className="app">
+        {tela !== "ajustes" && (
+          <SeletorMes mesAtual={mesAtual} mesMinimo={mesMinimo} onChange={mudarMes} />
         )}
 
-        {abaAtiva === "geral" && (
-          <AbaGeral
+        {tela === "resumo" && (
+          <TelaResumo
             mesAtual={mesAtual}
             cartoes={cartoes}
-            salario={salario}
+            salario={dados.salario}
             resumo={resumo}
             historico={historico}
-            salarioInput={salarioInput}
-            onSalarioInputChange={setSalarioInput}
-            onSalvarSalario={salvarSalario}
-            onIrParaAba={setAbaAtiva}
+            onAbrirContas={() => navegar("contas")}
+            onAbrirCartao={abrirCartao}
+            onAdicionar={() => setSheet("escolha")}
+            onDefinirSalario={() => {
+              navegar("ajustes");
+              setFocarSalario(true);
+            }}
             onSelecionarMes={mudarMes}
           />
         )}
 
-        {abaAtiva === "contas" && (
-          <AbaContas
+        {tela === "contas" && (
+          <TelaContas
             mesAtual={mesAtual}
             resumo={resumo}
-            mostrarForm={mostrarFormGasto}
-            onToggleForm={() => {
-              setFormGasto({ ...formGasto, mes: mesAtual });
-              setMostrarFormGasto(!mostrarFormGasto);
-            }}
-            form={formGasto}
-            onFormChange={setFormGasto}
-            onSalvarForm={salvarGasto}
             edicaoOverride={edicaoOverride}
             onEdicaoOverrideChange={setEdicaoOverride}
             onSalvarOverride={confirmarOverride}
             onRemoverOverride={voltarAoPadrao}
-            onTogglePago={(id) => togglePago(mesAtual, id)}
+            onTogglePago={togglePagoNoMes}
             onRemover={excluirGasto}
+            onAdicionar={abrirNovaConta}
           />
         )}
 
-        {cartaoAtivo && (
-          <AbaCartao
-            cartao={cartaoAtivo}
-            mesAtual={mesAtual}
-            resumo={resumo}
-            mostrarForm={mostrarFormCompra}
-            onToggleForm={() => {
-              setFormCompra({ ...formCompra, mes: mesAtual });
-              setMostrarFormCompra(!mostrarFormCompra);
-            }}
-            form={formCompra}
-            onFormChange={setFormCompra}
-            onSalvarForm={salvarCompra}
-            onRemoverCartao={() => excluirCartao(cartaoAtivo.id)}
-            onTogglePago={(id) => togglePago(mesAtual, id)}
-            onRemoverCompra={excluirCompra}
+        {tela === "cartoes" &&
+          (cartaoAtivo ? (
+            <DetalheCartao
+              cartao={cartaoAtivo}
+              mesAtual={mesAtual}
+              resumo={resumo}
+              onVoltar={() => setCartaoAberto(null)}
+              onNovaCompra={() => abrirNovaCompra(cartaoAtivo.id)}
+              onRemoverCartao={() => excluirCartao(cartaoAtivo.id)}
+              onTogglePago={togglePagoNoMes}
+              onRemoverCompra={excluirCompra}
+            />
+          ) : (
+            <TelaCartoes
+              cartoes={cartoes}
+              resumo={resumo}
+              onAbrirCartao={abrirCartao}
+              onNovoCartao={abrirNovoCartao}
+            />
+          ))}
+
+        {tela === "ajustes" && (
+          <TelaAjustes
+            dados={dados}
+            focarSalario={focarSalario}
+            onSalvarSalario={definirSalario}
+            ultimoBackup={ultimoBackup}
+            precisaBackup={lembrarBackup}
+            onExportado={backupExportado}
+            onImportar={importarBackup}
           />
         )}
+      </main>
 
-        <BackupDados dados={dados} onImportar={importarBackup} />
-      </div>
-    </div>
+      {tela !== "ajustes" && <BotaoAdicionar onClick={adicionar} rotulo={rotuloAdicionar} />}
+
+      <BarraNavegacao tela={tela} onChange={navegar} alertaAjustes={lembrarBackup} />
+
+      <Sheet aberto={sheet !== null} onFechar={() => setSheet(null)} titulo={TITULOS_SHEET[sheet]}>
+        {sheet === "escolha" && (
+          <EscolhaLancamento
+            temCartao={cartoes.length > 0}
+            onCompra={() => abrirNovaCompra(null)}
+            onConta={abrirNovaConta}
+          />
+        )}
+        {sheet === "compra" && (
+          <FormCompra
+            valores={formCompra}
+            cartoes={cartoes}
+            onChange={setFormCompra}
+            onSalvar={salvarCompra}
+          />
+        )}
+        {sheet === "conta" && (
+          <FormConta valores={formGasto} onChange={setFormGasto} onSalvar={salvarGasto} />
+        )}
+        {sheet === "cartao" && (
+          <FormCartao valores={formCartao} onChange={setFormCartao} onSalvar={salvarCartao} />
+        )}
+      </Sheet>
+    </>
   );
 }

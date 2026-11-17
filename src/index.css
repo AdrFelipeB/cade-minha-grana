@@ -1,16 +1,794 @@
-/* Os estilos do app são inline (ver src/theme.js).
-   Aqui fica só o reset mínimo da página e o que estilo inline
-   não consegue fazer (pseudo-classes como :focus-visible). */
+/* ============================================================
+   TEMA
+   ------------------------------------------------------------
+   Todas as cores são variáveis CSS. O tema claro é o padrão e o
+   escuro é aplicado automaticamente quando o aparelho está no
+   modo escuro (prefers-color-scheme). Componentes NUNCA usam hex
+   direto: usam var(--...), e assim funcionam nos dois temas.
+   ============================================================ */
+
+:root {
+  color-scheme: light dark; /* inputs nativos (ex.: seletor de mês) seguem o tema */
+
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #eef0f3;
+  --border: #e5e7eb;
+  --text: #1f2430;
+  --text-2: #6b7280;
+  --text-3: #9ca3af;
+
+  --accent: #4f46e5;
+  --on-accent: #ffffff;
+  --accent-soft: #eef2ff;
+
+  --success: #047857;
+  --on-success: #ffffff;
+  --success-soft: #ecfdf5;
+  --warning: #b45309;
+  --warning-fill: #f59e0b;
+  --warning-soft: #fffbeb;
+  --danger: #b91c1c;
+  --danger-fill: #ef4444;
+  --danger-soft: #fef2f2;
+
+  --sombra: 0 6px 20px rgba(17, 24, 39, 0.16);
+  --largura: 560px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121418;
+    --surface: #1b1e24;
+    --surface-2: #262a32;
+    --border: #2a2e37;
+    --text: #e6e8ec;
+    --text-2: #9aa0ab;
+    --text-3: #6b7280;
+
+    --accent: #818cf8;
+    --on-accent: #121418;
+    --accent-soft: rgba(129, 140, 248, 0.14);
+
+    --success: #34d399;
+    --on-success: #062e22;
+    --success-soft: rgba(52, 211, 153, 0.12);
+    --warning: #fbbf24;
+    --warning-fill: #fbbf24;
+    --warning-soft: rgba(251, 191, 36, 0.12);
+    --danger: #f87171;
+    --danger-fill: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.12);
+
+    --sombra: 0 6px 20px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ============================ BASE ============================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body {
   margin: 0;
-  background: #0e0b1e;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Anel de foco visível só para quem navega pelo teclado
-   (:focus-visible não aparece em cliques de mouse/toque). */
-input:focus-visible,
-button:focus-visible {
-  outline: 2px solid #c4b5fd;
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+/* Números alinhados em coluna (todos os dígitos com a mesma largura) */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Foco visível só para teclado */
+:focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.texto-2 { color: var(--text-2); }
+.texto-3 { color: var(--text-3); }
+.positivo { color: var(--success); }
+.negativo { color: var(--danger); }
+.alerta { color: var(--warning); }
+
+/* ============================ LAYOUT ============================ */
+
+.app {
+  max-width: var(--largura);
+  margin: 0 auto;
+  padding: 0 16px calc(104px + env(safe-area-inset-bottom));
+  min-height: 100dvh;
+}
+
+.topo-tela {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 2px 14px;
+}
+
+.topo-tela h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.secao-titulo {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin: 22px 2px 8px;
+}
+
+/* ---------- seletor de mês (fixo no topo ao rolar) ---------- */
+.seletor-mes {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 6px;
+}
+
+.seletor-mes__centro {
+  text-align: center;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.seletor-mes__titulo {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* ---------- barra de navegação inferior ---------- */
+.nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav__itens {
+  max-width: var(--largura);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.nav__item {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 8px 0 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.nav__item[aria-current="page"] {
+  color: var(--accent);
+}
+
+.nav__alerta {
+  position: absolute;
+  top: 6px;
+  left: calc(50% + 8px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warning-fill);
+}
+
+/* ---------- botão flutuante "+" ---------- */
+.fab {
+  position: fixed;
+  z-index: 11;
+  right: max(16px, calc(50% - var(--largura) / 2 + 16px));
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: var(--on-accent);
+  display: grid;
+  place-items: center;
+  box-shadow: var(--sombra);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.fab:active {
+  transform: scale(0.94);
+}
+
+/* ============================ SUPERFÍCIES ============================ */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+/* Card que contém uma lista de linhas */
+.card--lista {
+  padding: 0 16px;
+  overflow: hidden;
+}
+
+.rotulo {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.valor-grande {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 2px 0;
+}
+
+.par-valores {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.par-valores strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ---------- barra de progresso ---------- */
+.barra {
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 14px 0 10px;
+}
+
+.barra__preenchimento {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* ============================ LINHAS DE LISTA ============================ */
+
+.linha {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.linha:last-child {
+  border-bottom: none;
+}
+
+/* Linha inteira clicável: estica até as bordas do card para o realce de toque */
+.linha--botao {
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  cursor: pointer;
+}
+
+.linha--botao:hover {
+  background: var(--surface-2);
+}
+
+.linha__principal {
+  flex: 1;
+  min-width: 0;
+}
+
+.linha__titulo {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linha__detalhe {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.linha__valor {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.linha--pago .linha__titulo,
+.linha--pago .linha__valor {
+  color: var(--text-3);
+}
+
+.linha--pago .linha__titulo {
+  text-decoration: line-through;
+}
+
+.icone-linha {
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+
+/* Bolinha com a cor de cada cartão */
+.ponto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ponto--grande {
+  width: 14px;
+  height: 14px;
+}
+
+/* Na lista do resumo, a bolinha ocupa a mesma largura do ícone de Contas (20px)
+   para os nomes ficarem alinhados */
+.linha--botao > .ponto {
+  margin: 0 5px;
+}
+
+/* ---------- check de pago ---------- */
+.check {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--text-3);
+  background: transparent;
+  color: var(--on-success);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.check[aria-pressed="true"] {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+/* ---------- valor de conta fixa (clicável para ajustar o mês) ---------- */
+.valor-editavel {
+  background: none;
+  border: none;
+  border-bottom: 1px dashed var(--text-3);
+  padding: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.valor-editavel--alterado {
+  color: var(--warning);
+  border-bottom-color: var(--warning);
+}
+
+.edicao-valor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edicao-valor .input {
+  width: 108px;
+  height: 38px;
+}
+
+/* ============================ BOTÕES ============================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+
+.btn:hover {
+  background: var(--surface-2);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn--primario {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: transparent;
+}
+
+.btn--primario:hover {
+  background: var(--accent);
+  filter: brightness(1.08);
+}
+
+.btn--bloco {
+  width: 100%;
+}
+
+.btn--pequeno {
+  height: 38px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.btn--perigo {
+  color: var(--danger);
+}
+
+.btn--link {
+  height: auto;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.btn--link:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+/* Link de ação destrutiva (ex.: "Remover este cartão") */
+.btn--link.btn--perigo {
+  color: var(--danger);
+}
+
+.btn-icone {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.btn-icone:hover {
+  background: var(--surface-2);
+}
+
+.btn-icone:disabled {
+  opacity: 0.3;
+  cursor: default;
+  background: none;
+}
+
+.btn-icone--pequeno {
+  width: 32px;
+  height: 32px;
+  color: var(--text-3);
+}
+
+.btn-icone--pequeno:hover {
+  color: var(--danger);
+}
+
+/* ============================ FORMULÁRIOS ============================ */
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  min-width: 0;
+}
+
+.campo > label,
+.campo > .campo__rotulo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 16px; /* 16px evita o zoom automático do iPhone ao focar */
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.grade-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+/* Escolha entre duas opções (ex.: fixo / momentâneo) */
+.segmentado {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-2);
+  border-radius: 12px;
+}
+
+.segmentado button {
+  border: none;
+  background: none;
+  border-radius: 9px;
+  padding: 8px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.segmentado button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.segmentado small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-2);
+}
+
+.dica {
+  font-size: 13px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: -4px 0 14px;
+}
+
+.previa {
+  font-size: 14px;
+  color: var(--success);
+  margin: -4px 0 14px;
+}
+
+.erro {
+  font-size: 14px;
+  color: var(--danger);
+  margin: 0 0 12px;
+}
+
+/* ============================ SHEET (painel que sobe) ============================ */
+
+.sheet {
+  padding: 0;
+  border: none;
+  background: transparent;
+  width: 100%;
+  max-width: var(--largura);
+  max-height: 100dvh;
+  margin: auto auto 0; /* encostado embaixo no celular */
+  color: var(--text);
+}
+
+.sheet::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.sheet__conteudo {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 6px 20px calc(20px + env(safe-area-inset-bottom));
+  max-height: 92dvh;
+  overflow-y: auto;
+}
+
+.sheet[open] .sheet__conteudo {
+  animation: subir 0.2s ease-out;
+}
+
+.sheet__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 12px;
+}
+
+.sheet__topo h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+@media (min-width: 640px) {
+  .sheet {
+    margin: auto; /* centralizado no computador */
+  }
+  .sheet__conteudo {
+    border-radius: 20px;
+  }
+}
+
+@keyframes subir {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+/* Opções grandes do "o que você quer lançar?" */
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.opcao:hover {
+  background: var(--surface-2);
+}
+
+.opcao__icone {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* ============================ OUTROS ============================ */
+
+.vazio {
+  text-align: center;
+  padding: 28px 12px;
+  color: var(--text-2);
+}
+
+.vazio h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.vazio .btn {
+  margin-top: 14px;
+}
+
+.historico {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 480px) {
+  .historico {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.historico__item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.historico__item[aria-current] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.aviso-status {
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.aviso-status:empty {
+  margin-top: 0;
+}
+
+.selo-alerta {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--warning);
+  background: var(--warning-soft);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

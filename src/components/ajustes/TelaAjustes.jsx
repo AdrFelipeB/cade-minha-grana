@@ -1,0 +1,42 @@
+import { IconLock } from "@tabler/icons-react";
+import BackupDados from "./BackupDados";
+import CampoSalario from "./CampoSalario";
+
+export default function TelaAjustes({
+  dados,
+  focarSalario,
+  onSalvarSalario,
+  ultimoBackup,
+  precisaBackup,
+  onExportado,
+  onImportar,
+}) {
+  return (
+    <>
+      <div className="topo-tela" style={{ marginTop: 16 }}>
+        <h1>Ajustes</h1>
+      </div>
+
+      <h2 className="secao-titulo">Renda</h2>
+      <section className="card">
+        <CampoSalario salario={dados.salario} onSalvar={onSalvarSalario} autoFocus={focarSalario} />
+      </section>
+
+      <h2 className="secao-titulo">Seus dados</h2>
+      <section className="card">
+        <BackupDados
+          dados={dados}
+          ultimoBackup={ultimoBackup}
+          precisaBackup={precisaBackup}
+          onExportado={onExportado}
+          onImportar={onImportar}
+        />
+      </section>
+
+      <p className="rotulo" style={{ display: "flex", gap: 8, alignItems: "center", margin: "20px 2px" }}>
+        <IconLock size={16} aria-hidden="true" />
+        Meus Gastos não usa banco, conta nem internet: seus dados nunca saem deste aparelho.
+      </p>
+    </>
+  );
+}
