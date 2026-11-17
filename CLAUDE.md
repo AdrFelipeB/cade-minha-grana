@@ -104,7 +104,7 @@ Redesenhada em nov/2026: **limpa, minimalista e fácil de usar** (o visual antig
 3. ~~Exportar/importar backup em JSON, com aviso na UI~~ ✅
 4. ~~PWA (manifest + service worker): instalável, offline~~ ✅
 5. ~~Editar compras e contas já lançadas~~ ✅ (junto: vencimentos, categorias, limite, pagar tudo, desfazer, próximos meses, modo discreto, atalhos, ícone)
-6. ~~Deploy gratuito com guia no README~~ ✅ Vercel: https://cade-minha-grana-woad.vercel.app (projeto `cade-minha-grana`; `.vercel/` e `.env.local` com token ficam fora do Git). Deploy manual: `npx vercel deploy --prod`.
+6. ~~Deploy gratuito com guia no README~~ ✅ Vercel: https://cade-minha-grana-woad.vercel.app (projeto `cade-minha-grana`; `.vercel/` e `.env.local` com token ficam fora do Git). **Publica sozinho a cada push na `main`** (app da Vercel instalado no GitHub só com acesso a este repositório); outras branches ganham link de prévia. Deploy manual, se precisar: `npx vercel deploy --prod`.
 
 Futuro/talvez: renda extra por mês (freelas, 13º), dia de fechamento por cartão (hoje só vencimento), testes automatizados (Vitest) para `lib/`, sincronização opcional via backend gratuito (Supabase/Firebase) — este último só se o app ganhar tração.
 
