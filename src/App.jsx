@@ -23,6 +23,8 @@ import BotaoDiscreto from "./components/layout/BotaoDiscreto";
 import { TELAS } from "./components/layout/telas";
 import Sheet from "./components/comum/Sheet";
 import AvisoDesfazer from "./components/comum/AvisoDesfazer";
+import AvisoAtualizacao from "./components/comum/AvisoAtualizacao";
+import { pedirArmazenamentoPersistente } from "./hooks/useInstalacao";
 import EscolhaLancamento from "./components/EscolhaLancamento";
 import TelaResumo from "./components/resumo/TelaResumo";
 import ResumoDesktop from "./components/resumo/ResumoDesktop";
@@ -124,6 +126,11 @@ export default function App() {
 
   // Layout: celular (barra embaixo) ou desktop (menu lateral, várias colunas)
   const desktop = useMediaQuery(QUERY_DESKTOP);
+
+  // App instalado: pede ao navegador para não apagar os dados por falta de espaço
+  useEffect(() => {
+    pedirArmazenamentoPersistente();
+  }, []);
 
   /* -------- dados derivados -------- */
   const mesMinimo = addMeses(hojeMes(), -MESES_RETENCAO);
@@ -609,6 +616,8 @@ export default function App() {
       >
         {conteudoSheet}
       </Sheet>
+
+      <AvisoAtualizacao />
 
       <AvisoDesfazer
         aviso={avisoDesfazer}

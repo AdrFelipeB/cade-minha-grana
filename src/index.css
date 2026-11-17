@@ -936,6 +936,20 @@ p {
   background: var(--accent);
 }
 
+/* Aviso de atualização do app: no topo, para não brigar com o de "Desfazer" */
+.aviso-flutuante--topo {
+  top: calc(12px + env(safe-area-inset-top));
+  bottom: auto;
+}
+
+/* Lista numerada de passos (ex.: instalar no iPhone) */
+.passos {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
 /* Teclas de atalho (menu lateral) */
 kbd {
   display: inline-block;
@@ -1339,6 +1353,10 @@ kbd {
 .layout-desktop ~ .aviso-flutuante {
   bottom: 24px;
   left: 248px;
+}
+
+.layout-desktop ~ .aviso-flutuante--topo {
+  bottom: auto;
 }
 
 /* No desktop o seletor de mês fica à direita do título, sem grudar no topo */

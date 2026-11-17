@@ -2,6 +2,7 @@ import { IconLock } from "@tabler/icons-react";
 import { NOME_APP } from "../../marca";
 import BackupDados from "./BackupDados";
 import CampoSalario from "./CampoSalario";
+import SecaoInstalar from "./SecaoInstalar";
 
 /* Salário e backup. No celular, uma coluna; no desktop, lado a lado
    (o título da página fica na barra do topo). */
@@ -28,6 +29,13 @@ export default function TelaAjustes({
           <h2 className="secao-titulo">Renda</h2>
           <section className="card">
             <CampoSalario salario={dados.salario} onSalvar={onSalvarSalario} autoFocus={focarSalario} />
+          </section>
+        </div>
+
+        <div>
+          <h2 className="secao-titulo">App no celular</h2>
+          <section className="card">
+            <SecaoInstalar />
           </section>
         </div>
 
